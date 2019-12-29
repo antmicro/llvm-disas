@@ -12,7 +12,6 @@
                      LLVMInitialize ## x ## TargetInfo(); \
                      LLVMInitialize ## x ## TargetMC();
 
-
 ADD_ARCH(ARM);
 ADD_ARCH(RISCV);
 ADD_ARCH(X86);
@@ -37,7 +36,7 @@ const char *symbolLookupCallback(void *DisInfo, uint64_t ReferenceValue, uint64_
 	return "unknown";
 }
 
-int main()
+void llvm_disas_init()
 {
 	INIT_ARCH(ARM);
 	INIT_ARCH(RISCV);
@@ -46,7 +45,11 @@ int main()
 	INIT_ARCH(Sparc);
 	INIT_ARCH(PowerPC);
 	INIT_ARCH(Mips);
+}
 
+int main()
+{
+	llvm_disas_init();
 
 /////////////////////////////////////////////////////////////////////////
 // TODO: test
