@@ -2,7 +2,7 @@ image: debian:stretch
 
 before_script:
   - apt update
-  - apt install -y cmake wget g++ xz-utils
+  - apt install -y cmake g++ xz-utils
 
 build:
   script:
