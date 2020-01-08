@@ -1,0 +1,15 @@
+image: debian:stretch
+
+before_script:
+  - apt update
+  - apt install -y cmake wget g++ xz-utils
+
+build:
+  script:
+    - cmake .
+    - make
+
+  artifacts:
+    paths:
+      - main
+    when: always
