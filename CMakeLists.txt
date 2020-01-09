@@ -22,6 +22,8 @@ if(NOT IS_DIRECTORY ${LLVM_LIBS_DIR})
 	file(DOWNLOAD http://releases.llvm.org/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-${LLVM_OS}.tar.xz ${LLVM_XZ_PATH} SHOW_PROGRESS)
 
 	execute_process(COMMAND tar xf ${LLVM_XZ_PATH} --xz --wildcards --strip-components=2 "clang+llvm-${LLVM_VERSION}-x86_64-${LLVM_OS}/lib/libLLVM*.a" WORKING_DIRECTORY ${LLVM_LIBS_DIR})
+
+	file(REMOVE ${LLVM_XZ_PATH})
 endif()
 
 add_executable(main main.cpp stub.cpp)
@@ -36,6 +38,9 @@ add_executable(main main.cpp stub.cpp)
 file(GLOB LLVM_LIBS ${LLVM_LIBS_DIR}/*)
 set(LLVM_LIBS-LAST ${LLVM_LIBS_DIR}/libLLVMMC.a ${LLVM_LIBS_DIR}/libLLVMBinaryFormat.a ${LLVM_LIBS_DIR}/libLLVMSupport.a)
 list(REMOVE_ITEM LLVM_LIBS ${LLVM_LIBS-LAST})
+
+# Order of linked libraries is important. Globbed files list is sorted implicitly only since cmake 3.10.
+list(SORT LLVM_LIBS)
 
 target_link_libraries(main ${LLVM_LIBS} ${LLVM_LIBS-LAST})
 
