@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 2.8)
-include (ExternalProject)
 
 project (llvm-disas)
 
@@ -38,11 +37,11 @@ file(GLOB LLVM_LIBS ${LLVM_LIBS_DIR}/*)
 set(LLVM_LIBS-LAST ${LLVM_LIBS_DIR}/libLLVMMC.a ${LLVM_LIBS_DIR}/libLLVMBinaryFormat.a ${LLVM_LIBS_DIR}/libLLVMSupport.a)
 list(REMOVE_ITEM LLVM_LIBS ${LLVM_LIBS-LAST})
 
-target_link_libraries(main PRIVATE ${LLVM_LIBS} ${LLVM_LIBS-LAST})
+target_link_libraries(main ${LLVM_LIBS} ${LLVM_LIBS-LAST})
 
 # -pthread has meaning for both preprocessor and linker
 add_definitions(-pthread)
-target_link_libraries(main PRIVATE pthread)
+target_link_libraries(main pthread)
 
 # Override default "-rdynamic" linking flag (preventing adding all dynamic symbols from statically linked libraries to a resulting executable)
 set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
