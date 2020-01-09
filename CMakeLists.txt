@@ -44,7 +44,5 @@ target_link_libraries(main PRIVATE ${LLVM_LIBS} ${LLVM_LIBS-LAST})
 add_definitions(-pthread)
 target_link_libraries(main PRIVATE pthread)
 
-target_link_libraries(main PRIVATE -static-libgcc -static-libstdc++)
-
 # Override default "-rdynamic" linking flag (preventing adding all dynamic symbols from statically linked libraries to a resulting executable)
 set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
