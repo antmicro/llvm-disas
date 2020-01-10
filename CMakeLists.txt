@@ -15,13 +15,17 @@ if(NOT IS_DIRECTORY ${LLVM_LIBS_DIR})
 
 	if(CMAKE_HOST_APPLE)
 		set(LLVM_OS     darwin-apple)
+		# macOS's tar doesn't need --xz and --wildcards (using --wildcards even causes error)
+		set(TAR_OS_OPTS	"")
 	else()
 		set(LLVM_OS     pc-linux-gnu)
+		# It can't be like "--xz --wildcards": cmake then uses such string as single switch
+		set(TAR_OS_OPTS	--xz --wildcards)
 	endif()
 
 	file(DOWNLOAD http://releases.llvm.org/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-${LLVM_OS}.tar.xz ${LLVM_XZ_PATH} SHOW_PROGRESS)
 
-	execute_process(COMMAND tar xf ${LLVM_XZ_PATH} --xz --wildcards --strip-components=2 "clang+llvm-${LLVM_VERSION}-x86_64-${LLVM_OS}/lib/libLLVM*.a" WORKING_DIRECTORY ${LLVM_LIBS_DIR})
+	execute_process(COMMAND tar xf ${LLVM_XZ_PATH} ${TAR_OS_OPTS} --strip-components=2 "clang+llvm-${LLVM_VERSION}-x86_64-${LLVM_OS}/lib/libLLVM*.a" WORKING_DIRECTORY ${LLVM_LIBS_DIR})
 
 	file(REMOVE ${LLVM_XZ_PATH})
 endif()
