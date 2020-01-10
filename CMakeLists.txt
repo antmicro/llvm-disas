@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project (llvm-disas)
+project (renode-llvm-disas)
 
 set(LLVM_LIBS_DIR	${CMAKE_SOURCE_DIR}/llvm-libs)
 set(LLVM_VERSION	9.0.0)
