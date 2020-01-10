@@ -30,7 +30,7 @@ if(NOT IS_DIRECTORY ${LLVM_LIBS_DIR})
 	file(REMOVE ${LLVM_XZ_PATH})
 endif()
 
-add_executable(main main.cpp stub.cpp)
+add_library(llvm SHARED init.cpp stub.cpp)
 
 # We have to add libLLVMMC.a (must be first of those!), libLLVMBinaryFormat.a and libLLVMSupport.a libraries at the end again, because linking to libraries sorted by name causes undefined dependencies from 3 libraries:
 # 	libLLVMPowerPCDesc.a depends on ...MC.a
@@ -46,7 +46,10 @@ list(REMOVE_ITEM LLVM_LIBS ${LLVM_LIBS-LAST})
 # Order of linked libraries is important. Globbed files list is sorted implicitly only since cmake 3.10.
 list(SORT LLVM_LIBS)
 
-target_link_libraries(main ${LLVM_LIBS} ${LLVM_LIBS-LAST})
+target_link_libraries(llvm ${LLVM_LIBS} ${LLVM_LIBS-LAST})
+
+add_executable(main main.cpp)
+target_link_libraries(main llvm)
 
 # -pthread has meaning for both preprocessor and linker
 add_definitions(-pthread)
