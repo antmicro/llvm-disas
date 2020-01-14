@@ -7,10 +7,10 @@ before_script:
 build:
   script:
     - cmake .
-    - make
+    - make VERBOSE=1
 
   artifacts:
     paths:
       - libllvm.so
-      - main
+      - test-app
     when: always

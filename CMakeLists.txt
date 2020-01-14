@@ -1,10 +1,13 @@
-cmake_minimum_required(VERSION 2.8)
+# Older cmakes doesn't allow "generator expressions" such as $<TARGET_FILE:...> in target_link_libraries
+cmake_minimum_required(VERSION 2.8.11)
 
 project (renode-llvm-disas)
 
 set(LLVM_LIBS_DIR	${CMAKE_SOURCE_DIR}/llvm-libs)
 set(LLVM_VERSION	9.0.0)
 set(LLVM_XZ_PATH	${CMAKE_SOURCE_DIR}/llvm-${LLVM_VERSION}.tar.xz)
+
+add_definitions(-Wall)
 
 if(NOT CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i.e. APPLE and CYGWIN)."
 	message(FATAL_ERROR "The only supported operating systems are UNIX-like systems!")
@@ -30,7 +33,7 @@ if(NOT IS_DIRECTORY ${LLVM_LIBS_DIR})
 	file(REMOVE ${LLVM_XZ_PATH})
 endif()
 
-add_library(llvm SHARED init.cpp stub.cpp)
+add_library(llvm SHARED init.cpp stub.cpp create_disasm.cpp disasm_instruction.cpp)
 
 # We have to add libLLVMMC.a (must be first of those!), libLLVMBinaryFormat.a and libLLVMSupport.a libraries at the end again, because linking to libraries sorted by name causes undefined dependencies from 3 libraries:
 # 	libLLVMPowerPCDesc.a depends on ...MC.a
@@ -48,12 +51,16 @@ list(SORT LLVM_LIBS)
 
 target_link_libraries(llvm ${LLVM_LIBS} ${LLVM_LIBS-LAST})
 
-add_executable(main main.cpp)
-target_link_libraries(main llvm)
+# -pthread flag while compiling (add_definitions(-pthread)) shouldn't be needed as threads are only used by libraries
+target_link_libraries(llvm pthread)
 
-# -pthread has meaning for both preprocessor and linker
-add_definitions(-pthread)
-target_link_libraries(main pthread)
+add_executable(test-app test.cpp)
+
+# With just 'llvm' (instead of path to libllvm.so), command to build test-app executable links all libLLVM*.a again which will succesfully link even if we call libLLVM*.a functions directly from test.cpp (which is not fine as we want our library to be fully sufficient)
+target_link_libraries(test-app $<TARGET_FILE:llvm>)
+
+# However then we have to explicitly tell cmake to build test-app after llvm
+add_dependencies(test-app llvm)
 
 # Override default "-rdynamic" linking flag (preventing adding all dynamic symbols from statically linked libraries to a resulting executable)
 set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
