@@ -67,6 +67,38 @@ if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i
 
 	# Override default "-rdynamic" linking flag (preventing adding all dynamic symbols from statically linked libraries to a resulting executable)
 	set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
+elseif(CMAKE_HOST_WIN32)
+	set(LLVM_EXE_PATH       ${CMAKE_BINARY_DIR}/llvm-${LLVM_VERSION}-win64.exe)
+	set(LLVM-C_DIR          ${CMAKE_BINARY_DIR})
+	set(LLVM-C_PATH         ${LLVM-C_DIR}/LLVM-C.dll)
+
+	if(NOT EXISTS ${LLVM-C_PATH})
+		message("Necessary LLVM library not found...")
+
+		find_program(7ZIP 7z HINTS "C:/Program Files/7-Zip/")
+
+		if(${7ZIP} EQUAL "7ZIP-NOTFOUND")
+			message(FATAL_ERROR "7-zip not found! It is required for extracting LLVM-C.dll from LLVM installer.\n7z.exe can be pointed to by adding -D 7ZIP=\"<path>\" (e.g. -D 7ZIP=\"C:/Program Files/7-Zip/7z.exe\") while invoking CMake.")
+		endif()
+
+		if(NOT EXISTS ${LLVM_EXE_PATH})
+			message("Downloading LLVM...")
+			file(DOWNLOAD http://releases.llvm.org/${LLVM_VERSION}/LLVM-${LLVM_VERSION}-win64.exe ${LLVM_EXE_PATH} SHOW_PROGRESS)
+		endif()
+
+		message("Unpacking LLVM library...")
+		execute_process(COMMAND ${7ZIP} e ${LLVM_EXE_PATH} bin/LLVM-C.dll WORKING_DIRECTORY ${LLVM-C_DIR})
+
+		if(EXISTS ${LLVM-C_PATH})
+			file(REMOVE ${LLVM_EXE_PATH})
+		else()
+			message(FATAL_ERROR "Problem extracting LLVM-C.dll library out of LLVM installer!")
+		endif()
+	endif()
+
+	target_link_libraries(llvm ${LLVM-C_PATH})
+
+	target_link_libraries(test-app llvm)
 else()
-	message(FATAL_ERROR "The only supported operating systems are UNIX-like systems!")
+	message(FATAL_ERROR "The only supported operating systems are Windows and UNIX-like systems!")
 endif()
