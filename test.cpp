@@ -28,5 +28,7 @@ int cnt = llvm_disasm_instruction(dc, (uint8_t*)bytes, sz, pc, st, 1024);
 printf("cnt = %d\n", cnt);
 if (cnt > 0)
 printf("%s\n", st);
+
+llvm_disasm_dispose(dc);
 return 0;
 }

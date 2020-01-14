@@ -33,7 +33,7 @@ if(NOT IS_DIRECTORY ${LLVM_LIBS_DIR})
 	file(REMOVE ${LLVM_XZ_PATH})
 endif()
 
-add_library(llvm SHARED init.cpp stub.cpp create_disasm.cpp disasm_instruction.cpp)
+add_library(llvm SHARED init.cpp stub.cpp create_disasm.cpp disasm_instruction.cpp dispose.cpp)
 
 # We have to add libLLVMMC.a (must be first of those!), libLLVMBinaryFormat.a and libLLVMSupport.a libraries at the end again, because linking to libraries sorted by name causes undefined dependencies from 3 libraries:
 # 	libLLVMPowerPCDesc.a depends on ...MC.a
