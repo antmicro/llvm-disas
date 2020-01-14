@@ -35,6 +35,9 @@ endif()
 
 add_library(llvm SHARED init.cpp stub.cpp create_disasm.cpp disasm_instruction.cpp dispose.cpp)
 
+# To suppress CMP0042 policy warning about not setting MACOSX_RPATH for library on MAC OS X (which is only used in 'make install')
+set_property(TARGET llvm PROPERTY MACOSX_RPATH OFF)
+
 # We have to add libLLVMMC.a (must be first of those!), libLLVMBinaryFormat.a and libLLVMSupport.a libraries at the end again, because linking to libraries sorted by name causes undefined dependencies from 3 libraries:
 # 	libLLVMPowerPCDesc.a depends on ...MC.a
 #	...MC.a depends on both ...BinaryFormat.a and ...Support.a
