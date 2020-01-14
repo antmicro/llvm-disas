@@ -11,7 +11,7 @@ int opinfoCallback(void *DisInfo, uint64_t pc, uint64_t offset, uint64_t size, i
 
 const char *symbolLookupCallback(void *DisInfo, uint64_t ReferenceValue, uint64_t *ReferenceType, uint64_t ReferencePC, const char **ReferenceName);
 
-void llvm_disas_init(void);
+void llvm_disasm_init(void);
 
 void* llvm_create_disasm_cpu_features(const char *tripleName, const char* cpu, const char *features, void* disInfo, int tagType, LLVMOpInfoCallback getOpInfo, LLVMSymbolLookupCallback symbolLookUp);
 

@@ -20,7 +20,7 @@ ADD_ARCH(Mips);
                      LLVMInitialize ## x ## TargetInfo(); \
                      LLVMInitialize ## x ## TargetMC();
 
-void llvm_disas_init()
+void llvm_disasm_init(void)
 {
 	INIT_ARCH(ARM);
 	INIT_ARCH(RISCV);
