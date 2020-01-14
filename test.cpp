@@ -4,6 +4,18 @@
 
 #include "llvm.hpp"
 
+int opinfoCallback(void *DisInfo, uint64_t pc, uint64_t offset, uint64_t size, int tagType, void *tagBuf) {
+        printf("here %s\n", __func__);
+
+        return 1;
+}
+
+const char *symbolLookupCallback(void *DisInfo, uint64_t ReferenceValue, uint64_t *ReferenceType, uint64_t ReferencePC, const char **ReferenceName) {
+        printf("here %s\n", __func__);
+
+        return "unknown";
+}
+
 int main()
 {
 	llvm_disasm_init();
