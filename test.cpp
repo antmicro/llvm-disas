@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "llvm-init.hpp"
+#include "llvm.hpp"
 
 int main()
 {

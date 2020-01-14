@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "llvm-init.hpp"
+#include "llvm.hpp"
 
 #define ADD_ARCH(x) EXTERNAL void LLVMInitialize ## x ## Disassembler(); \
                     EXTERNAL void LLVMInitialize ## x ## TargetInfo(); \
