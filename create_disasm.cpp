@@ -19,7 +19,6 @@ const char *symbolLookupCallback(void *DisInfo, uint64_t ReferenceValue, uint64_
 EXTERNAL void* LLVMCreateDisasmCPUFeatures(const char *tripleName, const char* cpu, const char *features, void* disInfo, int tagType, LLVMOpInfoCallback getOpInfo, LLVMSymbolLookupCallback symbolLookUp);
 
 void* llvm_create_disasm_cpu_features(const char *tripleName, const char* cpu, const char *features, void* disInfo, int tagType, LLVMOpInfoCallback getOpInfo, LLVMSymbolLookupCallback symbolLookUp){
-	printf("here %s\n", __func__);
 
 	return LLVMCreateDisasmCPUFeatures(tripleName, cpu, features, disInfo, tagType, getOpInfo, symbolLookUp);
 }
@@ -27,7 +26,6 @@ void* llvm_create_disasm_cpu_features(const char *tripleName, const char* cpu, c
 EXTERNAL void* LLVMCreateDisasmCPU(const char *tripleName, const char* cpu, void* disInfo, int tagType, LLVMOpInfoCallback getOpInfo, LLVMSymbolLookupCallback symbolLookUp);
 
 void* llvm_create_disasm_cpu(const char *tripleName, const char* cpu, void* disInfo, int tagType, LLVMOpInfoCallback getOpInfo, LLVMSymbolLookupCallback symbolLookUp){
-	printf("here %s\n", __func__);
 
 	return LLVMCreateDisasmCPU(tripleName, cpu, disInfo, tagType, getOpInfo, symbolLookUp);
 }
