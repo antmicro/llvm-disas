@@ -8,26 +8,25 @@
                     EXTERNAL void LLVMInitialize ## x ## TargetInfo(); \
                     EXTERNAL void LLVMInitialize ## x ## TargetMC();
 
-ADD_ARCH(ARM);
-ADD_ARCH(RISCV);
-ADD_ARCH(X86);
-ADD_ARCH(AArch64);
-ADD_ARCH(Sparc);
-ADD_ARCH(PowerPC);
-ADD_ARCH(Mips);
+ADD_ARCH(AArch64)
+ADD_ARCH(ARM)
+ADD_ARCH(Mips)
+ADD_ARCH(PowerPC)
+ADD_ARCH(RISCV)
+ADD_ARCH(Sparc)
+ADD_ARCH(X86)
 
-#define INIT_ARCH(x) LLVMInitialize ## x ## Disassembler(); \
-                     LLVMInitialize ## x ## TargetInfo(); \
-                     LLVMInitialize ## x ## TargetMC();
+#define FUNC_INIT_ARCH(x) void llvm_disasm_ ## x ## _init(void){ \
+	LLVMInitialize ## x ## Disassembler(); \
+	LLVMInitialize ## x ## TargetInfo(); \
+	LLVMInitialize ## x ## TargetMC(); \
+	}
 
-void llvm_disasm_init(void)
-{
-	INIT_ARCH(ARM);
-	INIT_ARCH(RISCV);
-	INIT_ARCH(X86);
-	INIT_ARCH(AArch64);
-	INIT_ARCH(Sparc);
-	INIT_ARCH(PowerPC);
-	INIT_ARCH(Mips);
-}
+FUNC_INIT_ARCH(AArch64)
+FUNC_INIT_ARCH(ARM)
+FUNC_INIT_ARCH(Mips)
+FUNC_INIT_ARCH(PowerPC)
+FUNC_INIT_ARCH(RISCV)
+FUNC_INIT_ARCH(Sparc)
+FUNC_INIT_ARCH(X86)
 

@@ -18,7 +18,7 @@ const char *symbolLookupCallback(void *DisInfo, uint64_t ReferenceValue, uint64_
 
 int main()
 {
-	llvm_disasm_init();
+	llvm_disasm_RISCV_init();
 
 /////////////////////////////////////////////////////////////////////////
 // TODO: test
