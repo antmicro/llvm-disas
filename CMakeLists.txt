@@ -8,6 +8,7 @@ set(LLVM_VERSION	9.0.0)
 add_definitions(-Wall)
 
 add_library(LLVM SHARED init.cpp stub.cpp create_disasm.cpp disasm_instruction.cpp dispose.cpp)
+target_link_libraries(LLVM -Wl,--unresolved-symbols=report-all)
 
 add_executable(test-app test.cpp)
 
