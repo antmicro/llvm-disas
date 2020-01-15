@@ -16,6 +16,7 @@ if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i
 	set(LLVM_XZ_PATH	${CMAKE_SOURCE_DIR}/llvm-${LLVM_VERSION}.tar.xz)
 
 	if(NOT IS_DIRECTORY ${LLVM_LIBS_DIR})
+		message("Necessary LLVM libraries not found...")
 		file(MAKE_DIRECTORY ${LLVM_LIBS_DIR})
 
 		if(CMAKE_HOST_APPLE)
@@ -28,8 +29,12 @@ if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i
 			set(TAR_OS_OPTS	--xz --wildcards)
 		endif()
 
-		file(DOWNLOAD http://releases.llvm.org/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-${LLVM_OS}.tar.xz ${LLVM_XZ_PATH} SHOW_PROGRESS)
+		if(NOT EXISTS ${LLVM_XZ_PATH})
+			message("Downloading LLVM...")
+			file(DOWNLOAD http://releases.llvm.org/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-${LLVM_OS}.tar.xz ${LLVM_XZ_PATH} SHOW_PROGRESS)
+		endif()
 
+		message("Unpacking LLVM libraries...")
 		execute_process(COMMAND tar xf ${LLVM_XZ_PATH} ${TAR_OS_OPTS} --strip-components=2 "clang+llvm-${LLVM_VERSION}-x86_64-${LLVM_OS}/lib/libLLVM*.a" WORKING_DIRECTORY ${LLVM_LIBS_DIR})
 
 		file(REMOVE ${LLVM_XZ_PATH})
