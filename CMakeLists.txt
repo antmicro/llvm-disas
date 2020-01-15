@@ -7,7 +7,7 @@ set(LLVM_VERSION	9.0.0)
 
 add_definitions(-Wall)
 
-add_library(llvm SHARED init.cpp stub.cpp create_disasm.cpp disasm_instruction.cpp dispose.cpp)
+add_library(LLVM SHARED init.cpp stub.cpp create_disasm.cpp disasm_instruction.cpp dispose.cpp)
 
 add_executable(test-app test.cpp)
 
@@ -54,21 +54,21 @@ if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i
 	# Order of linked libraries is important. Globbed files list is sorted implicitly only since cmake 3.10.
 	list(SORT LLVM_LIBS)
 
-	target_link_libraries(llvm ${LLVM_LIBS} ${LLVM_LIBS-LAST})
+	target_link_libraries(LLVM ${LLVM_LIBS} ${LLVM_LIBS-LAST})
 
 	# -pthread flag while compiling (add_definitions(-pthread)) shouldn't be needed as threads are only used by libraries
-	target_link_libraries(llvm pthread)
+	target_link_libraries(LLVM pthread)
 
 	# To suppress CMP0042 policy warning about not setting MACOSX_RPATH for library on MAC OS X (which is only used in 'make install')
 	if(CMAKE_HOST_APPLE)
-		set_property(TARGET llvm PROPERTY MACOSX_RPATH OFF)
+		set_property(TARGET LLVM PROPERTY MACOSX_RPATH OFF)
 	endif()
 
-	# With just 'llvm' (instead of path to libllvm.so), Linux command to build test-app executable links all libLLVM*.a again which will succesfully create executable even if we call libLLVM*.a functions directly from test.cpp (which is not fine as we want our library to be independent of those libraries)
-	target_link_libraries(test-app $<TARGET_FILE:llvm>)
+	# With just 'LLVM' (instead of path to libLLVM.so), Linux command to build test-app executable links all libLLVM*.a again which will succesfully create executable even if we call libLLVM*.a functions directly from test.cpp (which is not fine as we want our library to be independent of those libraries)
+	target_link_libraries(test-app $<TARGET_FILE:LLVM>)
 
-	# However then we have to explicitly tell cmake to build test-app after llvm
-	add_dependencies(test-app llvm)
+	# However then we have to explicitly tell cmake to build test-app after LLVM
+	add_dependencies(test-app LLVM)
 
 	# Override default "-rdynamic" linking flag (preventing adding all dynamic symbols from statically linked libraries to a resulting executable)
 	set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
@@ -101,9 +101,9 @@ elseif(CMAKE_HOST_WIN32)
 		endif()
 	endif()
 
-	target_link_libraries(llvm ${LLVM-C_PATH})
+	target_link_libraries(LLVM ${LLVM-C_PATH})
 
-	target_link_libraries(test-app llvm)
+	target_link_libraries(test-app LLVM)
 else()
 	message(FATAL_ERROR "The only supported operating systems are Windows and UNIX-like systems!")
 endif()
