@@ -1,6 +1,4 @@
-#include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #define CSTUB(x) void x() { printf("WARNING: stub %s\n", __func__); }
 

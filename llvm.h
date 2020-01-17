@@ -1,6 +1,4 @@
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 typedef int(* LLVMOpInfoCallback) (void *DisInfo, uint64_t PC, uint64_t Offset, uint64_t Size, int TagType, void *TagBuf);
 typedef const char*(* LLVMSymbolLookupCallback) (void *DisInfo, uint64_t ReferenceValue, uint64_t *ReferenceType, uint64_t ReferencePC, const char **ReferenceName);

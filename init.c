@@ -1,7 +1,3 @@
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "llvm.h"
 
 #define ADD_ARCH(x) void LLVMInitialize ## x ## Disassembler(); \
