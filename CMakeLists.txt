@@ -7,10 +7,13 @@ set(LLVM_VERSION	9.0.0)
 
 add_definitions(-Wall)
 
-add_library(LLVM SHARED init.cpp stub.cpp create_disasm.cpp disasm_instruction.cpp dispose.cpp)
+add_library(LLVM SHARED init.c stub.c create_disasm.c disasm_instruction.c dispose.c)
 target_link_libraries(LLVM -Wl,--unresolved-symbols=report-all)
 
-add_executable(test-app test.cpp)
+# Use "C++ linker" to create LLVM target as LLVM code in linked libraries is written in C++
+set_property(TARGET LLVM PROPERTY LINKER_LANGUAGE "CXX")
+
+add_executable(test-app test.c)
 
 if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i.e. APPLE and CYGWIN)."
 	set(LLVM_LIBS_DIR	${CMAKE_SOURCE_DIR}/llvm-libs)
@@ -65,14 +68,14 @@ if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i
 		set_property(TARGET LLVM PROPERTY MACOSX_RPATH OFF)
 	endif()
 
-	# With just 'LLVM' (instead of path to libLLVM.so), Linux command to build test-app executable links all libLLVM*.a again which will succesfully create executable even if we call libLLVM*.a functions directly from test.cpp (which is not fine as we want our library to be independent of those libraries)
+	# With just 'LLVM' (instead of path to libLLVM.so), Linux command to build test-app executable links all libLLVM*.a again which will succesfully create executable even if we call libLLVM*.a functions directly from test.c (which is not fine as we want our library to be independent of those libraries)
 	target_link_libraries(test-app $<TARGET_FILE:LLVM>)
 
 	# However then we have to explicitly tell cmake to build test-app after LLVM
 	add_dependencies(test-app LLVM)
 
 	# Override default "-rdynamic" linking flag (preventing adding all dynamic symbols from statically linked libraries to a resulting executable)
-	set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
+	set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 elseif(CMAKE_HOST_WIN32)
 	set(LLVM_EXE_PATH       ${CMAKE_BINARY_DIR}/llvm-${LLVM_VERSION}-win64.exe)
 	set(LLVM-C_DIR          ${CMAKE_BINARY_DIR})
