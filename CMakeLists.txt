@@ -5,6 +5,7 @@ project (renode-llvm-disas)
 
 set(LLVM_VERSION	9.0.0)
 
+add_definitions(-Werror)
 add_definitions(-Wall)
 
 add_library(LLVM SHARED init.c stub.c create_disasm.c disasm_instruction.c dispose.c)
@@ -25,12 +26,11 @@ if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i
 
 		if(CMAKE_HOST_APPLE)
 			set(LLVM_OS     darwin-apple)
-			# macOS's tar doesn't need --xz and --wildcards (using --wildcards even causes error)
+			# macOS's tar default behaviour is like on Linux with --wildcards (and using --wildcards causes error)
 			set(TAR_OS_OPTS	"")
 		else()
 			set(LLVM_OS     pc-linux-gnu)
-			# It can't be like "--xz --wildcards": cmake then uses such string as single switch
-			set(TAR_OS_OPTS	--xz --wildcards)
+			set(TAR_OS_OPTS	"--wildcards")
 		endif()
 
 		if(NOT EXISTS ${LLVM_XZ_PATH})
@@ -73,9 +73,6 @@ if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i
 
 	# However then we have to explicitly tell cmake to build test-app after LLVM
 	add_dependencies(test-app LLVM)
-
-	# Override default "-rdynamic" linking flag (preventing adding all dynamic symbols from statically linked libraries to a resulting executable)
-	set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 elseif(CMAKE_HOST_WIN32)
 	set(LLVM_EXE_PATH       ${CMAKE_BINARY_DIR}/llvm-${LLVM_VERSION}-win64.exe)
 	set(LLVM-C_DIR          ${CMAKE_BINARY_DIR})
