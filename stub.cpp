@@ -2,9 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define EXTERNAL extern "C"
-
-#define CSTUB(x) EXTERNAL void x() { printf("WARNING: stub %s\n", __func__); }
+#define CSTUB(x) void x() { printf("WARNING: stub %s\n", __func__); }
 
 // 
 // TODO: those functions are just stubs
@@ -19,4 +17,3 @@ CSTUB(uncompress);
 CSTUB(crc32);
 CSTUB(compress2);
 CSTUB(compressBound);
-

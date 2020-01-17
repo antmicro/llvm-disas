@@ -2,11 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "llvm.hpp"
+#include "llvm.h"
 
-#define ADD_ARCH(x) EXTERNAL void LLVMInitialize ## x ## Disassembler(); \
-                    EXTERNAL void LLVMInitialize ## x ## TargetInfo(); \
-                    EXTERNAL void LLVMInitialize ## x ## TargetMC();
+#define ADD_ARCH(x) void LLVMInitialize ## x ## Disassembler(); \
+                    void LLVMInitialize ## x ## TargetInfo(); \
+                    void LLVMInitialize ## x ## TargetMC();
 
 ADD_ARCH(AArch64)
 ADD_ARCH(ARM)
@@ -29,4 +29,3 @@ FUNC_INIT_ARCH(PowerPC)
 FUNC_INIT_ARCH(RISCV)
 FUNC_INIT_ARCH(Sparc)
 FUNC_INIT_ARCH(X86)
-

@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "llvm.hpp"
+#include "llvm.h"
 
-EXTERNAL void LLVMDisasmDispose(void* dc);
+void LLVMDisasmDispose(void* dc);
 
 void llvm_disasm_dispose(void* dc){
 
