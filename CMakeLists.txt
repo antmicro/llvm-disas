@@ -36,12 +36,16 @@ if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i
 		if(NOT EXISTS ${LLVM_XZ_PATH})
 			message("Downloading LLVM...")
 			file(DOWNLOAD http://releases.llvm.org/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-${LLVM_OS}.tar.xz ${LLVM_XZ_PATH} SHOW_PROGRESS)
+		else()
+			message("Unpacking LLVM from a previously downloaded ${LLVM_XZ_PATH}")
 		endif()
 
 		message("Unpacking LLVM libraries...")
 		execute_process(COMMAND tar xf ${LLVM_XZ_PATH} ${TAR_OS_OPTS} --strip-components=2 "clang+llvm-${LLVM_VERSION}-x86_64-${LLVM_OS}/lib/libLLVM*.a" WORKING_DIRECTORY ${LLVM_LIBS_DIR})
 
 		file(REMOVE ${LLVM_XZ_PATH})
+	else()
+		message("Using LLVM from ${LLVM_LIBS_DIR} directory")
 	endif()
 
 	# We have to add libLLVMMC.a (must be first of those!), libLLVMBinaryFormat.a and libLLVMSupport.a libraries at the end again, because linking to libraries sorted by name causes undefined dependencies from 3 libraries:
@@ -60,7 +64,7 @@ if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i
 
 	target_link_libraries(LLVM ${LLVM_LIBS} ${LLVM_LIBS-LAST})
 
-	# -pthread flag while compiling (add_definitions(-pthread)) shouldn't be needed as threads are only used by libraries
+	# LLVM libraries use POSIX threads
 	target_link_libraries(LLVM pthread)
 
 	# To suppress CMP0042 policy warning about not setting MACOSX_RPATH for library on MAC OS X (which is only used in 'make install')
@@ -68,7 +72,9 @@ if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i
 		set_property(TARGET LLVM PROPERTY MACOSX_RPATH OFF)
 	endif()
 
-	# With just 'LLVM' (instead of path to libLLVM.so), Linux command to build test-app executable links all libLLVM*.a again which will succesfully create executable even if we call libLLVM*.a functions directly from test.c (which is not fine as we want our library to be independent of those libraries)
+	# When we provide 'LLVM' as a library to link, the resulting command to build test-app executable
+	# links all libLLVM*.a. For the purpose of the test we don't want that - we want the test-app to
+	# link only with libLLVM.so we've just built. That's why we provide the explicit path to libLLVM.so.
 	target_link_libraries(test-app $<TARGET_FILE:LLVM>)
 
 	# However then we have to explicitly tell cmake to build test-app after LLVM
@@ -90,6 +96,8 @@ elseif(CMAKE_HOST_WIN32)
 		if(NOT EXISTS ${LLVM_EXE_PATH})
 			message("Downloading LLVM...")
 			file(DOWNLOAD http://releases.llvm.org/${LLVM_VERSION}/LLVM-${LLVM_VERSION}-win64.exe ${LLVM_EXE_PATH} SHOW_PROGRESS)
+		else()
+			message("Unpacking LLVM from a previously downloaded ${LLVM_EXE_PATH}")
 		endif()
 
 		message("Unpacking LLVM library...")
@@ -100,6 +108,8 @@ elseif(CMAKE_HOST_WIN32)
 		else()
 			message(FATAL_ERROR "Problem extracting LLVM-C.dll library out of LLVM installer!")
 		endif()
+	else()
+		message("Using LLVM-C.dll from ${LLVM-C_PATH}")
 	endif()
 
 	target_link_libraries(LLVM ${LLVM-C_PATH})
