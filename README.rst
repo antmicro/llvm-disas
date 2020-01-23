@@ -27,19 +27,21 @@ After linking with static LLVM libraries, the result of a build is a single inde
 Windows
 +++++++
 
-The only fully tested Windows *CMake* generator is *"MinGW Makefiles"*.
-To run *CMake* specifying generator, run it with ``-G [GENERATOR]`` flag in a clean build directory (after the first run and creation of ``CMakeCache.txt`` generator can't be changed):
+For now, the only fully tested Windows *CMake* generator is *"MinGW Makefiles"*, which is not the default one.
+To run *CMake* specifying generator, run it with ``-G [GENERATOR]`` flag:
 
 	cmake.exe [PATH_TO_SOURCE] -G "MinGW Makefiles"
 
 and then build it using ``mingw32-make.exe``.
+It has to be done in a clean build directory because after the first run and creation of ``CMakeCache.txt`` generator can't be changed.
 
 During the first build-files generation *CMake* downloads and extracts ``LLVM-C.dll`` library using *7-Zip*.
-That's why it looks for ``7z.exe`` installed but we can specify path of ``7z.exe`` (if it's e.g. *"portable"* version of *7-Zip*) using ``-D`` switch:
+That's why it looks for ``7z.exe`` installed but it's path can be specified using ``-D`` switch:
 
 	-D7ZIP="C:/Users/John Doe/Downloads/7z.exe"
 
-After the first run and creating ``CMakeCache.txt`` in the build directory *CMake* can be run in that directory without those switches - even if it needs to use *7-Zip* again when ``LLVM-C.dll`` is missing.
+After the first run and creating ``CMakeCache.txt`` in the build directory *CMake* can be run in that directory without those switches.
+Even if *CMake* will need to use *7-Zip* again when ``LLVM-C.dll`` is missing.
 
 Generating *"MinGW Makefiles"* with *sh.exe* in *PATH* (e.g. with *Cygwin* installed)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
