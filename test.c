@@ -4,20 +4,11 @@
 
 #include "llvm.h"
 
-int opinfoCallback(void *DisInfo, uint64_t pc, uint64_t offset, uint64_t size, int tagType, void *tagBuf) {
-	return 1;
-}
-
-const char *symbolLookupCallback(void *DisInfo, uint64_t ReferenceValue, uint64_t *ReferenceType, uint64_t ReferencePC, const char **ReferenceName) {
-	return "unknown";
-}
-
 int main()
 {
 	llvm_disasm_RISCV_init();
 
-	void *dc = llvm_create_disasm_cpu_features("riscv32", "generic-rv32", "+a", NULL, 0, opinfoCallback, symbolLookupCallback);
-	printf("dc = %p\n", dc);
+	void *dc = llvm_create_disasm_cpu("riscv32", "generic-rv32");
 
 	char *st = (char*)malloc(1024);
 	int sz = 8;
