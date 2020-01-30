@@ -118,3 +118,27 @@ elseif(CMAKE_HOST_WIN32)
 else()
 	message(FATAL_ERROR "The only supported operating systems are Windows and UNIX-like systems!")
 endif()
+
+# CTEST
+enable_testing()
+
+add_test(NAME info COMMAND test-app)
+set_tests_properties(info PROPERTIES PASS_REGULAR_EXPRESSION "^Usage:")
+
+function(disas triple cpu code result)
+	set(TEST_NAME ${triple}_${cpu}_${code})
+	add_test(NAME ${TEST_NAME} COMMAND test-app ${triple} ${cpu} ${code})
+
+	# Special regex characters expected to be printed will have to be prefixed with double backslash
+	set_tests_properties(${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "^\t${result}\n$")
+endfunction(disas)
+
+set(ARCH riscv32 generic-rv32)
+disas(${ARCH} 1023002300020493 "mv\ts1, tp.*sb\tsp, 256\\(t1\\)")
+disas(${ARCH} 2049340848433 "sub\ts0, s1, s0.*mv\ts1, tp")
+
+set(ARCH thumb cortex-m4)
+disas(${ARCH} 0x0403f023440b43d1 "mvns\tr1, r2.*add\tr3, r1.*bic\tr4, r3, #3")
+# code is filled with zeros to make it 8B
+# 2B code: 0x0000 on ARM is "movs r0, r0"
+disas(${ARCH} 200f2c2 "movt\tr2, #8192.*movs\tr0, r0.*movs\tr0, r0")
