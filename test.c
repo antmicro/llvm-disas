@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
 
 #include "llvm.h"
 
@@ -49,15 +50,29 @@ int main(int argc, char** argv)
 
 	llvm_init_all();
 
+	//TODO: Check if tripleName and CPU are valid
 	void *dc = llvm_create_disasm_cpu(argv[1], argv[2]);
 
 	unsigned int buf_size = 1024;
-	char *buf = (char*)malloc(buf_size);
+	char *buf = (char*) malloc(buf_size);
 
-	int cnt = llvm_disasm_instruction(dc, (uint8_t*)&bytes, sizeof(bytes), addr_start, buf, buf_size);
-	printf("cnt = %d\n", cnt);
-	if (cnt > 0){
-		printf("%s\n", buf);
+	unsigned int cur_size = sizeof(bytes);
+	uint8_t* cur_bytes = (uint8_t*) &bytes;
+
+	while(cur_size != 0){
+		memset(buf, 0, buf_size);
+
+		int cnt = llvm_disasm_instruction(dc, cur_bytes, cur_size, addr_start, buf, buf_size);
+
+		if (cnt > 0){
+			printf("%s\n", buf);
+		} else {
+			break;
+		}
+
+		cur_bytes += cnt;
+		addr_start += cnt;
+		cur_size -= cnt;
 	}
 
 	free(buf);
