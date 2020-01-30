@@ -6,6 +6,7 @@
 
 #include "llvm.h"
 
+
 uint64_t strtohex64(const char* str){
 	errno = 0;
 	char* endptr;
@@ -35,15 +36,10 @@ void llvm_init_all(){
 
 int main(int argc, char** argv)
 {
-	if (argc != 4 && argc != 5){
-		fprintf(stderr, "Usage: %s tripleName CPU bytes [addr_start = 0x0]\n", argv[0]);
-		fprintf(stderr, "  (bytes and addr_start should be HEX – 64-bit max)\n");
+	if (argc != 4){
+		fprintf(stderr, "Usage: %s tripleName CPU bytes\n", argv[0]);
+		fprintf(stderr, "  \"bytes\" must be valid HEX (max 8B)\n");
 		exit(EXIT_FAILURE);
-	}
-
-	uint64_t addr_start = 0x0;
-	if (argc == 5){
-		addr_start = strtohex64(argv[4]);
 	}
 
 	uint64_t bytes = strtohex64(argv[3]);
@@ -62,7 +58,7 @@ int main(int argc, char** argv)
 	while(cur_size != 0){
 		memset(buf, 0, buf_size);
 
-		int cnt = llvm_disasm_instruction(dc, cur_bytes, cur_size, addr_start, buf, buf_size);
+		int cnt = llvm_disasm_instruction(dc, cur_bytes, cur_size, buf, buf_size);
 
 		if (cnt > 0){
 			printf("%s\n", buf);
@@ -71,7 +67,6 @@ int main(int argc, char** argv)
 		}
 
 		cur_bytes += cnt;
-		addr_start += cnt;
 		cur_size -= cnt;
 	}
 
