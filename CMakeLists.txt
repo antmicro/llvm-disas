@@ -9,7 +9,7 @@ add_definitions(-Werror)
 add_definitions(-Wall)
 
 add_library(LLVM SHARED init.c stub.c create_disasm.c disasm_instruction.c dispose.c)
-target_link_libraries(LLVM PRIVATE -Wl,--unresolved-symbols=report-all)
+target_link_libraries(LLVM PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wl,--unresolved-symbols=report-all>)
 
 # Use "C++ linker" to create LLVM target as LLVM code in linked libraries is written in C++
 set_property(TARGET LLVM PROPERTY LINKER_LANGUAGE "CXX")
@@ -49,22 +49,16 @@ if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i
 		message("Using LLVM from ${LLVM_LIBS_DIR} directory")
 	endif()
 
-	# We have to add libLLVMMC.a (must be first of those!), libLLVMBinaryFormat.a and libLLVMSupport.a libraries at the end again, because linking to libraries sorted by name causes undefined dependencies from 3 libraries:
-	# 	libLLVMPowerPCDesc.a depends on ...MC.a
-	#	...MC.a depends on both ...BinaryFormat.a and ...Support.a
-	#
-	# But it bugs out when target_link_libraries stumbles upon the library from LLVM_LIBS list (duplicates around 100 libraries while linking)!
-
-	## The only way that works is to remove those libraries from list and just link those after the others
 	file(GLOB LLVM_LIBS ${LLVM_LIBS_DIR}/*)
-	set(LLVM_LIBS-LAST ${LLVM_LIBS_DIR}/libLLVMMC.a ${LLVM_LIBS_DIR}/libLLVMBinaryFormat.a ${LLVM_LIBS_DIR}/libLLVMSupport.a)
-	list(REMOVE_ITEM LLVM_LIBS ${LLVM_LIBS-LAST})
-
-	# Order of linked libraries is important. Globbed files list is sorted implicitly only since cmake 3.10.
-	list(SORT LLVM_LIBS)
 
 	# PRIVATE to make sure libLLVM contains everything. With the default PUBLIC, LLVM_LIBS are propagated to test-app linkage.
-	target_link_libraries(LLVM PRIVATE ${LLVM_LIBS} ${LLVM_LIBS-LAST})
+	target_link_libraries(LLVM PRIVATE
+		# LLVM libraries have some dependencies between themselves
+		# GNU linker requires grouping such libraries to search them again as long as new symbols emerge and remain unresolved
+		$<$<CXX_COMPILER_ID:GNU>:-Wl,--start-group>
+		${LLVM_LIBS}
+		$<$<CXX_COMPILER_ID:GNU>:-Wl,--end-group>
+	)
 
 	# LLVM libraries use POSIX threads
 	target_link_libraries(LLVM PRIVATE pthread)
