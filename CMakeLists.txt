@@ -1,5 +1,5 @@
-# Older cmakes doesn't allow "generator expressions" such as $<TARGET_FILE:...> in target_link_libraries
-cmake_minimum_required(VERSION 2.8.11)
+# Older cmakes used a LINK_PRIVATE instead of a PRIVATE keyword
+cmake_minimum_required(VERSION 2.8.12)
 
 project (renode-llvm-disas)
 
@@ -9,12 +9,13 @@ add_definitions(-Werror)
 add_definitions(-Wall)
 
 add_library(LLVM SHARED init.c stub.c create_disasm.c disasm_instruction.c dispose.c)
-target_link_libraries(LLVM -Wl,--unresolved-symbols=report-all)
+target_link_libraries(LLVM PRIVATE -Wl,--unresolved-symbols=report-all)
 
 # Use "C++ linker" to create LLVM target as LLVM code in linked libraries is written in C++
 set_property(TARGET LLVM PROPERTY LINKER_LANGUAGE "CXX")
 
 add_executable(test-app test.c)
+target_link_libraries(test-app LLVM)
 
 if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i.e. APPLE and CYGWIN)."
 	set(LLVM_LIBS_DIR	${CMAKE_SOURCE_DIR}/llvm-libs)
@@ -62,23 +63,16 @@ if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i
 	# Order of linked libraries is important. Globbed files list is sorted implicitly only since cmake 3.10.
 	list(SORT LLVM_LIBS)
 
-	target_link_libraries(LLVM ${LLVM_LIBS} ${LLVM_LIBS-LAST})
+	# PRIVATE to make sure libLLVM contains everything. With the default PUBLIC, LLVM_LIBS are propagated to test-app linkage.
+	target_link_libraries(LLVM PRIVATE ${LLVM_LIBS} ${LLVM_LIBS-LAST})
 
 	# LLVM libraries use POSIX threads
-	target_link_libraries(LLVM pthread)
+	target_link_libraries(LLVM PRIVATE pthread)
 
 	# To suppress CMP0042 policy warning about not setting MACOSX_RPATH for library on MAC OS X (which is only used in 'make install')
 	if(CMAKE_HOST_APPLE)
 		set_property(TARGET LLVM PROPERTY MACOSX_RPATH OFF)
 	endif()
-
-	# When we provide 'LLVM' as a library to link, the resulting command to build test-app executable
-	# links all libLLVM*.a. For the purpose of the test we don't want that - we want the test-app to
-	# link only with libLLVM.so we've just built. That's why we provide the explicit path to libLLVM.so.
-	target_link_libraries(test-app $<TARGET_FILE:LLVM>)
-
-	# However then we have to explicitly tell cmake to build test-app after LLVM
-	add_dependencies(test-app LLVM)
 elseif(CMAKE_HOST_WIN32)
 	set(LLVM_EXE_PATH       ${CMAKE_BINARY_DIR}/llvm-${LLVM_VERSION}-win64.exe)
 	set(LLVM-C_DIR          ${CMAKE_BINARY_DIR})
@@ -112,9 +106,7 @@ elseif(CMAKE_HOST_WIN32)
 		message("Using LLVM-C.dll from ${LLVM-C_PATH}")
 	endif()
 
-	target_link_libraries(LLVM ${LLVM-C_PATH})
-
-	target_link_libraries(test-app LLVM)
+	target_link_libraries(LLVM PRIVATE ${LLVM-C_PATH})
 else()
 	message(FATAL_ERROR "The only supported operating systems are Windows and UNIX-like systems!")
 endif()
