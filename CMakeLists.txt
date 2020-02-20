@@ -121,16 +121,61 @@ function(disas triple cpu code result)
 	set(TEST_NAME ${triple}_${cpu}_${code})
 	add_test(NAME ${TEST_NAME} COMMAND test-app ${triple} ${cpu} ${code})
 
-	# Special regex characters expected to be printed will have to be prefixed with double backslash
-	set_tests_properties(${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "^\t${result}\n$")
+	# Escapes special regex characters expected in the result
+	string(REGEX REPLACE "\\$" "\\\\$" RES_ESC ${result})
+	string(REGEX REPLACE "\\(" "\\\\(" RES_ESC ${RES_ESC})
+	string(REGEX REPLACE "\\)" "\\\\)" RES_ESC ${RES_ESC})
+	string(REGEX REPLACE "\\[" "\\\\[" RES_ESC ${RES_ESC})
+	string(REGEX REPLACE "\\]" "\\\\]" RES_ESC ${RES_ESC})
+	string(REGEX REPLACE "\\." "\\\\." RES_ESC ${RES_ESC})
+	string(REGEX REPLACE "\\+" "\\\\+" RES_ESC ${RES_ESC})
+
+	# Allows different whitespace characters in place of TABs
+	# (for Sparc and PPC sometimes SPACE is returned instead of a TAB)
+	#
+	# Also allows passing next line after just 1 or 2 TABs (instead of "\n\t")
+	string(REGEX REPLACE "\\\t" "[\ \t\n]+" RES_ESC ${RES_ESC})
+
+	set_tests_properties(${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "^\t${RES_ESC}\n$")
 endfunction(disas)
 
 set(ARCH riscv32 generic-rv32)
-disas(${ARCH} 1023002300020493 "mv\ts1, tp.*sb\tsp, 256\\(t1\\)")
-disas(${ARCH} 0002049340848433 "sub\ts0, s1, s0.*mv\ts1, tp")
-disas(${ARCH} 2049340848433 "sub\ts0, s1, s0")
-disas(${ARCH} 40848433 "sub\ts0, s1, s0")
+disas(${ARCH} 1023002300020493	"mv	s1, tp	sb	sp, 256(t1)"		)
+disas(${ARCH} 0002049340848433	"sub	s0, s1, s0	mv	s1, tp"		)
+disas(${ARCH} 2049340848433	"sub	s0, s1, s0"		)
+disas(${ARCH} 40848433		"sub	s0, s1, s0"		)
+disas(${ARCH} 01212823		"sw	s2, 16(sp)"		)
+disas(${ARCH} 00b785b3		"add	a1, a5, a1"		)
+
+set(ARCH riscv64 generic-rv64)
+disas(${ARCH} 34011173		"csrrw	sp, mscratch, sp"	)
+disas(${ARCH} 00008297		"auipc	t0, 8"			)
 
 set(ARCH thumb cortex-m4)
-disas(${ARCH} 0x0403f023440b43d1 "mvns\tr1, r2.*add\tr3, r1.*bic\tr4, r3, #3")
-disas(${ARCH} 200f2c2 "movt\tr2, #8192")
+disas(${ARCH} 0403f023440b43d1	"mvns	r1, r2		add	r3, r1		bic	r4, r3, #3"	)
+disas(${ARCH} 200f2c2		"movt	r2, #8192"		)
+disas(${ARCH} 58c8		"ldr	r0, [r1, r3]"		)
+disas(${ARCH} 426df44f		"mov.w	r2, #60672"		)
+disas(${ARCH} 10b6		"asrs	r6, r6, #2"		)
+
+set(ARCH arm arm926ej-s)
+disas(${ARCH} 32855001		"addlo	r5, r5, #1"		)
+disas(${ARCH} e1b00a00		"lsls	r0, r0, #20"		)
+disas(${ARCH} 1a00000a		"bne	#40"			)
+
+set(ARCH i386 i386)
+disas(${ARCH} 140c7b6b		"imull	$20, 12(%ebx), %edi"	)
+disas(${ARCH} 45		"incl	%ebp"			)
+disas(${ARCH} c0b70f		"movzwl	%ax, %eax"		)
+disas(${ARCH} 00fda916c50c8966	"movw	%cx, 16623894(,%eax,8)"	)
+disas(${ARCH} 00fc005e1d010f	"lidtl	16515166"		)
+
+set(ARCH sparc leon3)
+disas(${ARCH} 18a0e885		"restore	%g2, 24, %g2"	)
+disas(${ARCH} 00000001		"nop"				)
+disas(${ARCH} 47006810		"ba	%xcc, 71"		)
+
+set(ARCH ppc ppc32)
+disas(${ARCH} 7c000048		"b	.+124"			)
+disas(${ARCH} 4000887f		"cmplw	7, 8, 0"		)
+disas(${ARCH} 3400e47c		"cntlzw	4, 7"			)
