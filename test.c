@@ -7,7 +7,7 @@
 #include "llvm.h"
 
 
-uint64_t strtohex64(const char* str){
+uint64_t strtohex64(const char* str, unsigned int* size){
 	errno = 0;
 	char* endptr;
 
@@ -20,6 +20,13 @@ uint64_t strtohex64(const char* str){
 		fprintf(stderr, "strtohex64: '%s' is not a valid HEX number!\n", str);
 		exit(EXIT_FAILURE);
 	}
+
+	unsigned int len = (unsigned int) (endptr - str);
+	if (len % 2 != 0){
+		len++;
+	}
+
+	*size = len / 2;
 
 	return hex;
 }
@@ -42,7 +49,8 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 
-	uint64_t bytes = strtohex64(argv[3]);
+	unsigned int size = 0;
+	uint64_t bytes = strtohex64(argv[3], &size);
 
 	llvm_init_all();
 
@@ -52,7 +60,7 @@ int main(int argc, char** argv)
 	unsigned int buf_size = 1024;
 	char *buf = (char*) malloc(buf_size);
 
-	unsigned int cur_size = sizeof(bytes);
+	unsigned int cur_size = size;
 	uint8_t* cur_bytes = (uint8_t*) &bytes;
 
 	while(cur_size != 0){
