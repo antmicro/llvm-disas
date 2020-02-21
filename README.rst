@@ -35,12 +35,21 @@ To run *CMake* specifying the generator, run it with the ``-G [GENERATOR]`` flag
 and then build it using ``mingw32-make.exe``.
 It has to be done in a clean build directory because after the first run and creation of ``CMakeCache.txt``, the generator can't be changed.
 
-During the first build-files generation *CMake* downloads and extracts ``LLVM-C.dll`` library using *7-Zip*.
-That's why it looks for ``7z.exe`` installed but its path can be specified using the ``-D`` switch:
+LLVM library
+^^^^^^^^^^^^
+
+This project requires the ``LLVM-C.dll`` library from the *LLVM* project.
+For now, the library from *LLVM v9.0* is the recommended one.
+
+Its parent directory can be specified using the ``-DLLVM-C_USERDIR`` switch.
+E.g., if *LLVM* is installed in the default Windows directory, such switch can be used:
+
+	-DLLVM-C_USERDIR="C:/Program Files/LLVM/bin/"
+
+Without it, or when the library can't be found there, *CMake* will try to download *LLVM* installer and extract ``LLVM-C.dll`` from it using *7-Zip*.
+That's why it can look for the ``7z.exe`` installed but its path can also be specified using the ``-D7ZIP`` switch:
 
 	-D7ZIP="C:/Users/John Doe/Downloads/7z.exe"
-
-After the first run and creating ``CMakeCache.txt`` in the build directory *CMake* can be run in that directory without those switches.
 
 Generating *"MinGW Makefiles"* with *sh.exe* in *PATH* (e.g. with *Cygwin* installed)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
