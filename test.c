@@ -6,80 +6,81 @@
 
 #include "llvm.h"
 
-
-uint64_t strtohex64(const char* str, unsigned int* size){
-	errno = 0;
-	char* endptr;
-
-	uint64_t hex = (uint64_t) strtoull(str, &endptr, 16);
-
-	if (errno != 0){
-		perror("strtohex64");
-		exit(EXIT_FAILURE);
-	} else if (endptr == str){
-		fprintf(stderr, "strtohex64: '%s' is not a valid HEX number!\n", str);
-		exit(EXIT_FAILURE);
-	}
-
-	unsigned int len = (unsigned int) (endptr - str);
-	if (len % 2 != 0){
-		len++;
-	}
-
-	*size = len / 2;
-
-	return hex;
-}
-
-void llvm_init_all(){
-	llvm_disasm_AArch64_init();
-	llvm_disasm_ARM_init();
-	llvm_disasm_Mips_init();
-	llvm_disasm_PowerPC_init();
-	llvm_disasm_RISCV_init();
-	llvm_disasm_Sparc_init();
-	llvm_disasm_X86_init();
-}
-
-int main(int argc, char** argv)
+uint64_t strtohex64(const char *str, unsigned int *size)
 {
-	if (argc != 4){
-		fprintf(stderr, "Usage: %s {tripleName} {CPU} {bytes}\n", argv[0]);
-		fprintf(stderr, "  {bytes} must be a valid HEX (max 8B)\n");
-		exit(EXIT_FAILURE);
-	}
+    errno = 0;
+    char *endptr;
 
-	unsigned int size = 0;
-	uint64_t bytes = strtohex64(argv[3], &size);
+    uint64_t hex = (uint64_t) strtoull(str, &endptr, 16);
 
-	llvm_init_all();
+    if (errno != 0) {
+        perror("strtohex64");
+        exit(EXIT_FAILURE);
+    } else if (endptr == str) {
+        fprintf(stderr, "strtohex64: '%s' is not a valid HEX number!\n", str);
+        exit(EXIT_FAILURE);
+    }
 
-	//TODO: Check if tripleName and CPU are valid
-	void *dc = llvm_create_disasm_cpu(argv[1], argv[2]);
+    unsigned int len = (unsigned int) (endptr - str);
+    if (len % 2 != 0) {
+        len++;
+    }
 
-	unsigned int buf_size = 1024;
-	char *buf = (char*) malloc(buf_size);
+    *size = len / 2;
 
-	unsigned int cur_size = size;
-	uint8_t* cur_bytes = (uint8_t*) &bytes;
+    return hex;
+}
 
-	while(cur_size != 0){
-		memset(buf, 0, buf_size);
+void llvm_init_all()
+{
+    llvm_disasm_AArch64_init();
+    llvm_disasm_ARM_init();
+    llvm_disasm_Mips_init();
+    llvm_disasm_PowerPC_init();
+    llvm_disasm_RISCV_init();
+    llvm_disasm_Sparc_init();
+    llvm_disasm_X86_init();
+}
 
-		int cnt = llvm_disasm_instruction(dc, cur_bytes, cur_size, buf, buf_size);
+int main(int argc, char **argv)
+{
+    if (argc != 4) {
+        fprintf(stderr, "Usage: %s {tripleName} {CPU} {bytes}\n", argv[0]);
+        fprintf(stderr, "  {bytes} must be a valid HEX (max 8B)\n");
+        exit(EXIT_FAILURE);
+    }
 
-		if (cnt > 0){
-			printf("%s\n", buf);
-		} else {
-			break;
-		}
+    unsigned int size = 0;
+    uint64_t bytes = strtohex64(argv[3], &size);
 
-		cur_bytes += cnt;
-		cur_size -= cnt;
-	}
+    llvm_init_all();
 
-	free(buf);
-	llvm_disasm_dispose(dc);
+    //TODO: Check if tripleName and CPU are valid
+    void *dc = llvm_create_disasm_cpu(argv[1], argv[2]);
 
-	return 0;
+    unsigned int buf_size = 1024;
+    char *buf = (char *) malloc(buf_size);
+
+    unsigned int cur_size = size;
+    uint8_t *cur_bytes = (uint8_t *) &bytes;
+
+    while (cur_size != 0) {
+        memset(buf, 0, buf_size);
+
+        int cnt = llvm_disasm_instruction(dc, cur_bytes, cur_size, buf, buf_size);
+
+        if (cnt > 0) {
+            printf("%s\n", buf);
+        } else {
+            break;
+        }
+
+        cur_bytes += cnt;
+        cur_size -= cnt;
+    }
+
+    free(buf);
+    llvm_disasm_dispose(dc);
+
+    return 0;
 }

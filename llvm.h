@@ -14,7 +14,7 @@ void llvm_disasm_Sparc_init(void);
 
 void llvm_disasm_X86_init(void);
 
-void* llvm_create_disasm_cpu(const char* tripleName, const char* cpu);
+void *llvm_create_disasm_cpu(const char *tripleName, const char *cpu);
 
 int llvm_disasm_instruction(void *dc, uint8_t *bytes, uint64_t bytessize, char *outString, uint32_t strlen);
 

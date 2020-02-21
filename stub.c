@@ -2,7 +2,7 @@
 
 #define CSTUB(x) void x() { printf("WARNING: stub %s\n", __func__); }
 
-// 
+//
 // TODO: those functions are just stubs
 // of zlib and curses functions.
 //
