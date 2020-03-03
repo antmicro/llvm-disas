@@ -14,6 +14,6 @@ build:
 
   artifacts:
     paths:
-      - build/libLLVM.so
+      - build/libllvm-disas.so
       - build/test-app
     when: always

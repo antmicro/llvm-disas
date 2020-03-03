@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "llvm.h"
+#include "llvm-disas.h"
 
 void *LLVMCreateDisasmCPU(const char *tripleName, const char *cpu, void *disInfo, int tagType, void *getOpInfo, void *symbolLookUp);
 

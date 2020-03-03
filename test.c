@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "llvm.h"
+#include "llvm-disas.h"
 
 uint64_t strtohex64(const char *str, unsigned int *size)
 {

@@ -1,4 +1,4 @@
-#include "llvm.h"
+#include "llvm-disas.h"
 
 int LLVMDisasmInstruction(void *dc, uint8_t *bytes, uint64_t bytessize, uint64_t pc, char *outString, uint32_t strlen);
 

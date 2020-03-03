@@ -8,14 +8,14 @@ set(LLVM_VERSION	9.0.0)
 add_definitions(-Werror)
 add_definitions(-Wall)
 
-add_library(LLVM SHARED init.c stub.c create_disasm.c disasm_instruction.c dispose.c)
-target_link_libraries(LLVM PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wl,--unresolved-symbols=report-all>)
+add_library(llvm-disas SHARED init.c stub.c create_disasm.c disasm_instruction.c dispose.c)
+target_link_libraries(llvm-disas PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wl,--unresolved-symbols=report-all>)
 
-# Use "C++ linker" to create LLVM target as LLVM code in linked libraries is written in C++
-set_property(TARGET LLVM PROPERTY LINKER_LANGUAGE "CXX")
+# Use "C++ linker" to create llvm-disas target as LLVM code is written in C++
+set_property(TARGET llvm-disas PROPERTY LINKER_LANGUAGE "CXX")
 
 add_executable(test-app test.c)
-target_link_libraries(test-app LLVM)
+target_link_libraries(test-app llvm-disas)
 
 if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i.e. APPLE and CYGWIN)."
 	set(LLVM_LIBS_DIR	${CMAKE_SOURCE_DIR}/lib/llvm)
@@ -51,8 +51,8 @@ if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i
 
 	file(GLOB LLVM_LIBS ${LLVM_LIBS_DIR}/*)
 
-	# PRIVATE to make sure libLLVM contains everything. With the default PUBLIC, LLVM_LIBS are propagated to the test-app linkage.
-	target_link_libraries(LLVM PRIVATE
+	# PRIVATE to make sure llvm-disas contains everything. With the default PUBLIC, LLVM_LIBS are propagated to the test-app linkage.
+	target_link_libraries(llvm-disas PRIVATE
 		# LLVM libraries have some dependencies between themselves
 		# GNU linker requires grouping such libraries to search them again as long as new symbols emerge and remain unresolved
 		$<$<CXX_COMPILER_ID:GNU>:-Wl,--start-group>
@@ -61,11 +61,11 @@ if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i
 	)
 
 	# LLVM libraries use POSIX threads
-	target_link_libraries(LLVM PRIVATE pthread)
+	target_link_libraries(llvm-disas PRIVATE pthread)
 
 	# To suppress CMP0042 policy warning about not setting MACOSX_RPATH for library on MAC OS X (which is only used in 'make install')
 	if(CMAKE_HOST_APPLE)
-		set_property(TARGET LLVM PROPERTY MACOSX_RPATH OFF)
+		set_property(TARGET llvm-disas PROPERTY MACOSX_RPATH OFF)
 	endif()
 elseif(CMAKE_HOST_WIN32)
 	set(LLVM-C_DIR          ${CMAKE_SOURCE_DIR}/lib)
@@ -104,7 +104,7 @@ elseif(CMAKE_HOST_WIN32)
 		message("Using LLVM-C.dll from ${LLVM-C_PATH}")
 	endif()
 
-	target_link_libraries(LLVM PRIVATE ${LLVM-C_PATH})
+	target_link_libraries(llvm-disas PRIVATE ${LLVM-C_PATH})
 
 	add_custom_command(TARGET test-app POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${LLVM-C_PATH} ${CMAKE_BINARY_DIR})
 else()

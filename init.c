@@ -1,4 +1,4 @@
-#include "llvm.h"
+#include "llvm-disas.h"
 
 #define ADD_ARCH(x)                             \
     void LLVMInitialize ## x ## Disassembler(); \
