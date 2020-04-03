@@ -68,45 +68,54 @@ if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i
 		set_property(TARGET llvm-disas PROPERTY MACOSX_RPATH OFF)
 	endif()
 elseif(CMAKE_HOST_WIN32)
-	set(LLVM-C_DIR          ${CMAKE_SOURCE_DIR}/lib)
-	set(LLVM-C_PATH         ${LLVM-C_DIR}/LLVM-C.dll)
+	set(LLVM_LIBS_DIR	${CMAKE_SOURCE_DIR}/lib/llvm)
+	set(LLVM_LIBS		AArch64Desc AArch64Disassembler AArch64Info AArch64Utils ARMDesc ARMDisassembler ARMInfo ARMUtils BinaryFormat MC MCDisassembler MipsDesc MipsDisassembler MipsInfo PowerPCDesc PowerPCDisassembler PowerPCInfo RISCVDesc RISCVDisassembler RISCVInfo RISCVUtils SparcDesc SparcDisassembler SparcInfo Support X86Desc X86Disassembler X86Info X86Utils)
 
-	if(NOT EXISTS ${LLVM-C_PATH})
-		if(EXISTS ${LLVM-C_USERDIR}/LLVM-C.dll)
-			message("Found existing LLVM-C.dll library in ${LLVM-C_USERDIR}, copying it to ${LLVM-C_DIR}...")
-			file(COPY ${LLVM-C_USERDIR}/LLVM-C.dll DESTINATION ${LLVM-C_DIR})
-		else()
-			message("Necessary LLVM-C.dll library not found... the -DLLVM-C_USERDIR=\"C:/.../\" switch can be used to specify the directory containing it.")
-
-			find_program(7ZIP 7z HINTS "C:/Program Files/7-Zip/")
-			if(${7ZIP} EQUAL "7ZIP-NOTFOUND")
-				message(FATAL_ERROR "7-zip not found! It is required to extract LLVM-C.dll from LLVM installer.\n7z.exe can be pointed to by adding -D7ZIP=\"<path>\" (e.g. -D7ZIP=\"C:/Program Files/7-Zip/7z.exe\") while invoking CMake.")
-			endif()
-
-			set(LLVM_EXE_PATH  ${CMAKE_SOURCE_DIR}/lib/llvm-${LLVM_VERSION}-win64.exe)
-			if(NOT EXISTS ${LLVM_EXE_PATH})
-				message("Downloading LLVM...")
-				file(DOWNLOAD http://releases.llvm.org/${LLVM_VERSION}/LLVM-${LLVM_VERSION}-win64.exe ${LLVM_EXE_PATH} SHOW_PROGRESS)
-			else()
-				message("Unpacking LLVM from a previously downloaded ${LLVM_EXE_PATH}")
-			endif()
-
-			message("Unpacking LLVM library...")
-			execute_process(COMMAND ${7ZIP} e ${LLVM_EXE_PATH} bin/LLVM-C.dll WORKING_DIRECTORY ${LLVM-C_DIR})
-
-			if(EXISTS ${LLVM-C_PATH})
-				file(REMOVE ${LLVM_EXE_PATH})
-			else()
-				message(FATAL_ERROR "Problem occured while extracting LLVM-C.dll library out of the LLVM installer!")
-			endif()
+	foreach(LIB ${LLVM_LIBS})
+		if(NOT EXISTS ${LLVM_LIBS_DIR}/libLLVM${LIB}.a)
+			message("At least one of the 'libLLVM*.a' libraries doesn't exist!")
+			set(BUILD_LLVM_LIBS	ON)
+			break()
 		endif()
-	else()
-		message("Using LLVM-C.dll from ${LLVM-C_PATH}")
+	endforeach()
+
+	if(BUILD_LLVM_LIBS)
+		message("LLVM libraries will be created as a part of this build.")
+		foreach(LIB ${LLVM_LIBS})
+			list(APPEND LLVM_MAKE_TARGETS	LLVM${LIB})
+			list(APPEND LLVM_BUILD_PATHS	${CMAKE_BINARY_DIR}/llvm-ep-prefix/src/llvm-ep-build/lib/libLLVM${LIB}.a)
+		endforeach(LIB)
+
+		include(ExternalProject)
+		ExternalProject_Add(llvm-ep
+			DOWNLOAD_DIR		${LLVM_LIBS_DIR}
+			URL			https://releases.llvm.org/9.0.0/llvm-9.0.0.src.tar.xz
+			URL_HASH		SHA512=1bb3341e1d231559b948f1505b33c2e2e03989f9b8bbfef0e0cdaff5ac43f85574c9ec5ac53399b914f497d6899425d861411024e8d7e1d1a338c1c6951ac658
+			CMAKE_ARGS		"-DCMAKE_SH=${CMAKE_SH}" "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+			BUILD_COMMAND		${CMAKE_MAKE_PROGRAM} ${LLVM_MAKE_TARGETS}
+			COMMAND			${CMAKE_COMMAND} -E copy_if_different ${LLVM_BUILD_PATHS} ${LLVM_LIBS_DIR}
+			INSTALL_COMMAND		""
+			TEST_COMMAND		""
+		)
+
+		add_dependencies(llvm-disas llvm-ep)
 	endif()
 
-	target_link_libraries(llvm-disas PRIVATE ${LLVM-C_PATH})
+	# The libraries list can't be created with file(GLOB...) as it lists files while configuring and the External Project will be downloaded and built during building
+	foreach(LIB ${LLVM_LIBS})
+		list(APPEND LLVM_LIB_PATHS ${LLVM_LIBS_DIR}/libLLVM${LIB}.a)
+	endforeach(LIB)
 
-	add_custom_command(TARGET test-app POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${LLVM-C_PATH} ${CMAKE_BINARY_DIR})
+	# PRIVATE to make sure llvm-disas contains everything. With the default PUBLIC, LLVM_LIBS are propagated to the test-app linkage.
+	target_link_libraries(llvm-disas PRIVATE
+		# LLVM libraries have some dependencies between themselves
+		# GNU linker requires grouping such libraries to search them again as long as new symbols emerge and remain unresolved
+		$<$<CXX_COMPILER_ID:GNU>:-Wl,--start-group>
+		${LLVM_LIB_PATHS}
+		$<$<CXX_COMPILER_ID:GNU>:-Wl,--end-group>
+	)
+
+	target_link_libraries(llvm-disas PRIVATE -static)
 else()
 	message(FATAL_ERROR "The only supported operating systems are Windows and UNIX-like systems!")
 endif()
