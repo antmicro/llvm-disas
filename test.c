@@ -45,8 +45,8 @@ void llvm_init_all()
 int main(int argc, char **argv)
 {
     if (argc != 4) {
-        fprintf(stderr, "Usage: %s {tripleName} {CPU} {bytes}\n", argv[0]);
-        fprintf(stderr, "  {bytes} must be a valid HEX (max 8B)\n");
+        fprintf(stderr, "Usage: %s {cpu-arch} {cpu-model} {block}\n", argv[0]);
+        fprintf(stderr, "  {block} must be a valid HEX (max 8B)\n");
         exit(EXIT_FAILURE);
     }
 

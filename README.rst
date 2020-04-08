@@ -1,8 +1,21 @@
-llvm-disassembler
-=================
+llvm-disas
+==========
 
 This library is a wrapper for *LLVM* disassembling functions.
 It is used to disassembly machine code in `Renode <https://renode.io>`_ (e.g. while logging instructions executed by the emulated device).
+
+Not all of the CPU architectures supported by the *LLVM* are supported by this library.
+The following *LLVM CPU architecture groups* (e.g. *X86* groups at least *i386*, *i686* and *x86_64*) are currently supported by the *libllvm-disas*:
+
+- *AArch64*
+- *ARM*
+- *Mips*
+- *PowerPC*
+- *RISCV*
+- *Sparc*
+- *X86*
+
+Support for given CPU architectures depends on whether the appropriate ``LLVMInitialize{ARCHGROUP}*`` functions are wrapped by the library (and appropriate ``libLLVM${ARCHGROUP}*`` libraries linked during building).
 
 Building
 --------
@@ -75,3 +88,25 @@ So in case of encountering such an error::
 
 please try using *CMake* with an additional ``-DCMAKE_SH="CMAKE_SH-NOTFOUND`` switch.
 It's only needed for the first run of *CMake*.
+
+Testing
+-------
+
+The ``test-app`` testing executable provides a way to test the ``llvm-disas`` library's disassembly capabilities.
+
+Manual testing
+++++++++++++++
+
+``test-app`` can be executed manually with the ``{cpu-arch} {cpu-model} {block}`` arguments.
+The first two arguments indicate the cpu architecture (e.g. ``riscv64``) and the cpu model (e.g. ``generic-rv64``), respectively, and are based on the *LLVM* naming.
+
+The third argument is used to pass a block of the machine code to disassemble, represented as a string containing hexadecimal digits (doesn't have to be prefixed with ``0x``).
+In a single execution, ``test-app`` can disassemble up to 8B of machine code (up to 16 hex digits), which may contain multiple instructions.
+
+Automatic testing 
++++++++++++++++++
+
+Automatic testing is supported by the `CTest <https://gitlab.kitware.com/cmake/community/-/wikis/doc/ctest/Testing-With-CTest>`_.
+``CMakeLists.txt`` contains automatic tests, which test the disassembling of various *"code-blocks"* in a various CPU architectures supported by this library.
+
+They can be executed after building the project using the ``ctest`` command in a build directory.
