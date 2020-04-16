@@ -1,9 +1,26 @@
-# Older cmakes used a LINK_PRIVATE instead of a PRIVATE keyword
-cmake_minimum_required(VERSION 2.8.12)
+# Older CMakes have problems downloading LLVM archives
+cmake_minimum_required(VERSION 3.2)
 
 project (renode-llvm-disas)
 
+
+# Variables describing LLVM libraries
+
 set(LLVM_VERSION	9.0.0)
+set(LLVM_LIBS_DIR	${CMAKE_SOURCE_DIR}/lib/llvm)
+set(LLVM_LIBS		AArch64Desc AArch64Disassembler AArch64Info AArch64Utils ARMDesc ARMDisassembler ARMInfo ARMUtils BinaryFormat MC MCDisassembler MipsDesc MipsDisassembler MipsInfo PowerPCDesc PowerPCDisassembler PowerPCInfo RISCVDesc RISCVDisassembler RISCVInfo RISCVUtils SparcDesc SparcDisassembler SparcInfo Support X86Desc X86Disassembler X86Info X86Utils)
+
+# On macOS "sys::PrintStackTrace" needs extra "itaniumDemangle" function from LLVMDemangle library
+if(CMAKE_HOST_APPLE)
+	list(APPEND LLVM_LIBS Demangle)
+endif()
+
+foreach(LIB ${LLVM_LIBS})
+	list(APPEND LLVM_LIB_PATHS ${LLVM_LIBS_DIR}/libLLVM${LIB}.a)
+endforeach(LIB)
+
+
+# Define targets
 
 add_definitions(-Werror)
 add_definitions(-Wall)
@@ -11,14 +28,36 @@ add_definitions(-Wall)
 add_library(llvm-disas SHARED init.c stub.c create_disasm.c disasm_instruction.c dispose.c)
 target_link_libraries(llvm-disas PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wl,--unresolved-symbols=report-all>)
 
-# Use "C++ linker" to create llvm-disas target as LLVM code is written in C++
+# PRIVATE to make sure llvm-disas contains everything. With the default PUBLIC, LLVM libraries are propagated to the test-app linkage.
+target_link_libraries(llvm-disas PRIVATE
+	# LLVM libraries have some dependencies between themselves
+	# GNU linker requires grouping such libraries to search them again as long as new symbols emerge and remain unresolved
+	$<$<CXX_COMPILER_ID:GNU>:-Wl,--start-group>
+	${LLVM_LIB_PATHS}
+	$<$<CXX_COMPILER_ID:GNU>:-Wl,--end-group>
+)
+
+# Use C++ libraries during linking as LLVM code is written in C++
 set_property(TARGET llvm-disas PROPERTY LINKER_LANGUAGE "CXX")
+
+# Make sure MinGW links all non-Windows libraries statically
+target_link_libraries(llvm-disas PRIVATE $<$<BOOL:${CMAKE_HOST_WIN32}>:-static>)
+
+# LLVM libraries use POSIX threads
+target_link_libraries(llvm-disas PRIVATE pthread)
+
+# Suppress CMP0042 policy warning about not setting MACOSX_RPATH for library on MAC OS X (which is only used in 'make install')
+if(CMAKE_HOST_APPLE)
+	set_property(TARGET llvm-disas PROPERTY MACOSX_RPATH OFF)
+endif()
 
 add_executable(test-app test.c)
 target_link_libraries(test-app llvm-disas)
 
+
+# Preparing LLVM libraries
+
 if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i.e. APPLE and CYGWIN)."
-	set(LLVM_LIBS_DIR	${CMAKE_SOURCE_DIR}/lib/llvm)
 	set(LLVM_XZ_PATH	${CMAKE_SOURCE_DIR}/llvm-${LLVM_VERSION}.tar.xz)
 
 	if(NOT IS_DIRECTORY ${LLVM_LIBS_DIR})
@@ -48,31 +87,9 @@ if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i
 	else()
 		message("Using LLVM from ${LLVM_LIBS_DIR} directory")
 	endif()
-
-	file(GLOB LLVM_LIBS ${LLVM_LIBS_DIR}/*)
-
-	# PRIVATE to make sure llvm-disas contains everything. With the default PUBLIC, LLVM_LIBS are propagated to the test-app linkage.
-	target_link_libraries(llvm-disas PRIVATE
-		# LLVM libraries have some dependencies between themselves
-		# GNU linker requires grouping such libraries to search them again as long as new symbols emerge and remain unresolved
-		$<$<CXX_COMPILER_ID:GNU>:-Wl,--start-group>
-		${LLVM_LIBS}
-		$<$<CXX_COMPILER_ID:GNU>:-Wl,--end-group>
-	)
-
-	# LLVM libraries use POSIX threads
-	target_link_libraries(llvm-disas PRIVATE pthread)
-
-	# To suppress CMP0042 policy warning about not setting MACOSX_RPATH for library on MAC OS X (which is only used in 'make install')
-	if(CMAKE_HOST_APPLE)
-		set_property(TARGET llvm-disas PROPERTY MACOSX_RPATH OFF)
-	endif()
 elseif(CMAKE_HOST_WIN32)
-	set(LLVM_LIBS_DIR	${CMAKE_SOURCE_DIR}/lib/llvm)
-	set(LLVM_LIBS		AArch64Desc AArch64Disassembler AArch64Info AArch64Utils ARMDesc ARMDisassembler ARMInfo ARMUtils BinaryFormat MC MCDisassembler MipsDesc MipsDisassembler MipsInfo PowerPCDesc PowerPCDisassembler PowerPCInfo RISCVDesc RISCVDisassembler RISCVInfo RISCVUtils SparcDesc SparcDisassembler SparcInfo Support X86Desc X86Disassembler X86Info X86Utils)
-
-	foreach(LIB ${LLVM_LIBS})
-		if(NOT EXISTS ${LLVM_LIBS_DIR}/libLLVM${LIB}.a)
+	foreach(LIB ${LLVM_LIB_PATHS})
+		if(NOT EXISTS ${LIB})
 			message("At least one of the 'libLLVM*.a' libraries doesn't exist!")
 			set(BUILD_LLVM_LIBS	ON)
 			break()
@@ -100,27 +117,13 @@ elseif(CMAKE_HOST_WIN32)
 
 		add_dependencies(llvm-disas llvm-ep)
 	endif()
-
-	# The libraries list can't be created with file(GLOB...) as it lists files while configuring and the External Project will be downloaded and built during building
-	foreach(LIB ${LLVM_LIBS})
-		list(APPEND LLVM_LIB_PATHS ${LLVM_LIBS_DIR}/libLLVM${LIB}.a)
-	endforeach(LIB)
-
-	# PRIVATE to make sure llvm-disas contains everything. With the default PUBLIC, LLVM_LIBS are propagated to the test-app linkage.
-	target_link_libraries(llvm-disas PRIVATE
-		# LLVM libraries have some dependencies between themselves
-		# GNU linker requires grouping such libraries to search them again as long as new symbols emerge and remain unresolved
-		$<$<CXX_COMPILER_ID:GNU>:-Wl,--start-group>
-		${LLVM_LIB_PATHS}
-		$<$<CXX_COMPILER_ID:GNU>:-Wl,--end-group>
-	)
-
-	target_link_libraries(llvm-disas PRIVATE -static)
 else()
 	message(FATAL_ERROR "The only supported operating systems are Windows and UNIX-like systems!")
 endif()
 
+
 # CTEST
+
 enable_testing()
 
 add_test(NAME info COMMAND test-app)
