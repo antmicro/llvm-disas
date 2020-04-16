@@ -1,4 +1,4 @@
-image: debian:stretch
+image: debian:latest
 
 before_script:
   - apt update
@@ -6,14 +6,22 @@ before_script:
 
 build:
   script:
-    - mkdir build
-    - cd build
+    - mkdir shared
+    - cd shared
     - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - make VERBOSE=1
+    - ctest -V
+    - cd ..
+    - mkdir static
+    - cd static
+    - cmake -DCMAKE_BUILD_TYPE=Release -DSTATIC_LLVM_DISAS=ON ..
     - make VERBOSE=1
     - ctest -V
 
   artifacts:
     paths:
-      - build/libllvm-disas.so
-      - build/test-app
+      - shared/libllvm-disas.so
+      - shared/test-app
+      - static/libllvm-disas.a
+      - static/test-app
     when: always

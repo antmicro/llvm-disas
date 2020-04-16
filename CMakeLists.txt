@@ -25,34 +25,51 @@ endforeach(LIB)
 add_definitions(-Werror)
 add_definitions(-Wall)
 
-add_library(llvm-disas SHARED init.c stub.c create_disasm.c disasm_instruction.c dispose.c)
-target_link_libraries(llvm-disas PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wl,--unresolved-symbols=report-all>)
+if(NOT CMAKE_HOST_WIN32)
+	set(STATIC_LLVM_DISAS OFF CACHE BOOL "Controls whether llvm-disas will be a static library; by default it's a shared library")
+endif()
 
-# PRIVATE to make sure llvm-disas contains everything. With the default PUBLIC, LLVM libraries are propagated to the test-app linkage.
-target_link_libraries(llvm-disas PRIVATE
-	# LLVM libraries have some dependencies between themselves
-	# GNU linker requires grouping such libraries to search them again as long as new symbols emerge and remain unresolved
-	$<$<CXX_COMPILER_ID:GNU>:-Wl,--start-group>
-	${LLVM_LIB_PATHS}
-	$<$<CXX_COMPILER_ID:GNU>:-Wl,--end-group>
-)
+if(STATIC_LLVM_DISAS)
+	# Because of using the OBJECT IMPORTED library
+	cmake_minimum_required(VERSION 3.9)
 
-# Use C++ libraries during linking as LLVM code is written in C++
-set_property(TARGET llvm-disas PROPERTY LINKER_LANGUAGE "CXX")
+	# LLVM objects' paths are specified after extracting them from the LLVM libraries
+	add_library(llvm_objs OBJECT IMPORTED)
+	add_library(llvm-disas STATIC init.c stub.c create_disasm.c disasm_instruction.c dispose.c $<TARGET_OBJECTS:llvm_objs>)
 
-# Make sure MinGW links all non-Windows libraries statically
-target_link_libraries(llvm-disas PRIVATE $<$<BOOL:${CMAKE_HOST_WIN32}>:-static>)
+	set(TARGET_LINKING_LLVM_LIBS test-app)
+else()
+	add_library(llvm-disas SHARED init.c stub.c create_disasm.c disasm_instruction.c dispose.c)
+	target_link_libraries(llvm-disas PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wl,--unresolved-symbols=report-all>)
 
-# LLVM libraries use POSIX threads
-target_link_libraries(llvm-disas PRIVATE pthread)
+	# PRIVATE to make sure llvm-disas contains everything. With the default PUBLIC, LLVM libraries are propagated to the test-app linkage.
+	target_link_libraries(llvm-disas PRIVATE
+		# LLVM libraries have some dependencies between themselves
+		# GNU linker requires grouping such libraries to search them again as long as new symbols emerge and remain unresolved
+		$<$<CXX_COMPILER_ID:GNU>:-Wl,--start-group>
+		${LLVM_LIB_PATHS}
+		$<$<CXX_COMPILER_ID:GNU>:-Wl,--end-group>
+	)
 
-# Suppress CMP0042 policy warning about not setting MACOSX_RPATH for library on MAC OS X (which is only used in 'make install')
-if(CMAKE_HOST_APPLE)
-	set_property(TARGET llvm-disas PROPERTY MACOSX_RPATH OFF)
+	# Make sure MinGW links all non-Windows libraries statically
+	target_link_libraries(llvm-disas PRIVATE $<$<BOOL:${CMAKE_HOST_WIN32}>:-static>)
+
+	# Suppress CMP0042 policy warning about not setting MACOSX_RPATH for library on MAC OS X (which is only used in 'make install')
+	if(CMAKE_HOST_APPLE)
+		set_property(TARGET llvm-disas PROPERTY MACOSX_RPATH OFF)
+	endif()
+
+	set(TARGET_LINKING_LLVM_LIBS llvm-disas)
 endif()
 
 add_executable(test-app test.c)
-target_link_libraries(test-app llvm-disas)
+target_link_libraries(test-app PRIVATE llvm-disas)
+
+# Use "C++ linker" to link target as LLVM code is written in C++
+set_property(TARGET ${TARGET_LINKING_LLVM_LIBS} PROPERTY LINKER_LANGUAGE "CXX")
+
+# LLVM libraries use POSIX threads
+target_link_libraries(${TARGET_LINKING_LLVM_LIBS} PRIVATE pthread)
 
 
 # Preparing LLVM libraries
@@ -119,6 +136,21 @@ elseif(CMAKE_HOST_WIN32)
 	endif()
 else()
 	message(FATAL_ERROR "The only supported operating systems are Windows and UNIX-like systems!")
+endif()
+
+
+# Extract LLVM objects to combine into the one static library
+
+if(STATIC_LLVM_DISAS)
+	set(LLVM_OBJS_DIR	${CMAKE_BINARY_DIR}/obj)
+
+	file(MAKE_DIRECTORY ${LLVM_OBJS_DIR})
+	foreach(LIB ${LLVM_LIB_PATHS})
+		execute_process(COMMAND ${CMAKE_AR} -x ${LIB} WORKING_DIRECTORY ${LLVM_OBJS_DIR})
+	endforeach(LIB)
+
+	file(GLOB LLVM_OBJS ${LLVM_OBJS_DIR}/*)
+	set_target_properties(llvm_objs PROPERTIES IMPORTED_OBJECTS "${LLVM_OBJS}")
 endif()
 
 
