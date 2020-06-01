@@ -15,7 +15,7 @@
 .build_artifacts: &build_artifacts
   artifacts:
     paths:
-      - shared/libllvm-disas.so
+      - shared/libllvm-disas.*
       - shared/test-app
       - static/libllvm-disas.a
       - static/test-app
@@ -26,5 +26,10 @@ linux:
   before_script:
     - apt update
     - apt install -y cmake g++ xz-utils
+  <<: *build_script
+  <<: *build_artifacts
+
+macos:
+  tags: ["renode-macos"]
   <<: *build_script
   <<: *build_artifacts
