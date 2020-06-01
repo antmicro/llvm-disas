@@ -33,3 +33,13 @@ macos:
   tags: ["renode-macos"]
   <<: *build_script
   <<: *build_artifacts
+
+windows:
+  tags: ["renode-windows"]
+  script:
+    - bash .ci/windows.sh
+  artifacts:
+    paths:
+      - shared/libllvm-disas.dll
+      - shared/test-app.exe
+    when: always
