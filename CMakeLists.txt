@@ -178,7 +178,7 @@ function(disas triple cpu code result)
 	# (for Sparc and PPC sometimes SPACE is returned instead of a TAB)
 	#
 	# Also allows passing next line after just 1 or 2 TABs (instead of "\n\t")
-	string(REGEX REPLACE "\\\t" "[\ \t\n]+" RES_ESC ${RES_ESC})
+	string(REGEX REPLACE "\\\t" "[\ \t\n]*" RES_ESC ${RES_ESC})
 
 	set_tests_properties(${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "^\t${RES_ESC}\n$")
 endfunction(disas)
@@ -186,7 +186,7 @@ endfunction(disas)
 # The result string delimeter should be TAB.
 
 set(ARCH riscv32 generic-rv32) # rv32i
-disas(${ARCH} 1023002300020493	"mv	s1, tp	sb	sp, 256(t1)"		)
+disas(${ARCH} 1023002300020493	"mv	s1, tp		sb	sp, 256(t1)"	)
 disas(${ARCH} 0002049340848433	"sub	s0, s1, s0	mv	s1, tp"		)
 disas(${ARCH} 2049340848433	"sub	s0, s1, s0"		)
 disas(${ARCH} 40848433		"sub	s0, s1, s0"		)
@@ -198,22 +198,22 @@ disas(${ARCH} 0000100F		"fence.i	"		) # Zifencei
 disas(${ARCH} 3401f173		"csrrci	sp, mscratch, 3"	) # Zicsr
 
 set(ARCH riscv32 rv32imafdc) # The same as rv32gc
-disas(${ARCH} 02ab5c33		"divu	s8, s6, a0"		) # rv32m
+disas(${ARCH} 02ab5c33		"divu		s8, s6, a0"	) # rv32m
 disas(${ARCH} 0805252f		"amoswap.w	a0, zero, (a0)"	) # rv32a
 disas(${ARCH} 580123d3		"fsqrt.s	ft7, ft2, rdn"	) # rv32f
 disas(${ARCH} 5a0123d3		"fsqrt.d	ft7, ft2, rdn"	) # rv32d
-disas(${ARCH} eabc		"fsw	fa5, 80(a3)"		) # rv32c
+disas(${ARCH} eabc		"fsw		fa5, 80(a3)"	) # rv32c
 
 set(ARCH riscv64 generic-rv64) # rv64i
 disas(${ARCH} 000a3a83		"ld	s5, 0(s4)"		)
 disas(${ARCH} abcd8a9b		"addiw	s5, s11, -1348"		)
 
 set(ARCH riscv64 rv64imafdc) # The same as rv64gc
-disas(${ARCH} 02ab7c3b		"remuw	s8, s6, a0"		) # rv64m
+disas(${ARCH} 02ab7c3b		"remuw		s8, s6, a0"	) # rv64m
 disas(${ARCH} e705b52f		"amomaxu.d.aqrl	a0, a6, (a1)"	) # rv64a
 disas(${ARCH} d0312353		"fcvt.s.lu	ft6, sp, rdn"	) # rv64f
 disas(${ARCH} d2312353		"fcvt.d.lu	ft6, sp, rdn"	) # rv64d
-disas(${ARCH} eabc		"sd	a5, 80(a3)"		) # rv64c
+disas(${ARCH} eabc		"sd		a5, 80(a3)"	) # rv64c
 
 set(ARCH thumb cortex-m4)
 disas(${ARCH} 0403f023440b43d1	"mvns	r1, r2		add	r3, r1		bic	r4, r3, #3"	)
