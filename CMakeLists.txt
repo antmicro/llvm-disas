@@ -204,11 +204,25 @@ disas(${ARCH} 580123d3		"fsqrt.s	ft7, ft2, rdn"	) # rv32f
 disas(${ARCH} 5a0123d3		"fsqrt.d	ft7, ft2, rdn"	) # rv32d
 disas(${ARCH} eabc		"fsw		fa5, 80(a3)"	) # rv32c
 
+set(ARCH riscv32 rv32gc) # The same as rv32imafdc
+disas(${ARCH} 02ab5c33		"divu		s8, s6, a0"	) # rv32m
+disas(${ARCH} 0805252f		"amoswap.w	a0, zero, (a0)"	) # rv32a
+disas(${ARCH} 580123d3		"fsqrt.s	ft7, ft2, rdn"	) # rv32f
+disas(${ARCH} 5a0123d3		"fsqrt.d	ft7, ft2, rdn"	) # rv32d
+disas(${ARCH} eabc		"fsw		fa5, 80(a3)"	) # rv32c
+
 set(ARCH riscv64 generic-rv64) # rv64i
 disas(${ARCH} 000a3a83		"ld	s5, 0(s4)"		)
 disas(${ARCH} abcd8a9b		"addiw	s5, s11, -1348"		)
 
 set(ARCH riscv64 rv64imafdc) # The same as rv64gc
+disas(${ARCH} 02ab7c3b		"remuw		s8, s6, a0"	) # rv64m
+disas(${ARCH} e705b52f		"amomaxu.d.aqrl	a0, a6, (a1)"	) # rv64a
+disas(${ARCH} d0312353		"fcvt.s.lu	ft6, sp, rdn"	) # rv64f
+disas(${ARCH} d2312353		"fcvt.d.lu	ft6, sp, rdn"	) # rv64d
+disas(${ARCH} eabc		"sd		a5, 80(a3)"	) # rv64c
+
+set(ARCH riscv64 rv64gc) # The same as rv64imafdc
 disas(${ARCH} 02ab7c3b		"remuw		s8, s6, a0"	) # rv64m
 disas(${ARCH} e705b52f		"amomaxu.d.aqrl	a0, a6, (a1)"	) # rv64a
 disas(${ARCH} d0312353		"fcvt.s.lu	ft6, sp, rdn"	) # rv64f
