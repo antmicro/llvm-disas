@@ -55,8 +55,12 @@ int main(int argc, char **argv)
 
     llvm_init_all();
 
-    //TODO: Check if tripleName and CPU are valid
     void *dc = llvm_create_disasm_cpu(argv[1], argv[2]);
+    if (dc == NULL)
+    {
+        fprintf(stderr, "Error creating context (invalid {cpu-arch}?).\n");
+        exit(EXIT_FAILURE);
+    } 
 
     unsigned int buf_size = 1024;
     char *buf = (char *) malloc(buf_size);
