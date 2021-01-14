@@ -46,7 +46,10 @@ if(STATIC_LLVM_DISAS)
 	set(TARGET_LINKING_LLVM_LIBS test-app)
 else()
 	add_library(llvm-disas SHARED init.c stub.c create_disasm.c disasm_instruction.c dispose.c)
-	target_link_libraries(llvm-disas PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wl,--unresolved-symbols=report-all>)
+	target_link_libraries(llvm-disas PRIVATE
+		$<$<CXX_COMPILER_ID:GNU>:-Wl,--unresolved-symbols=report-all>
+		$<$<CXX_COMPILER_ID:GNU>:-static-libgcc>
+		$<$<CXX_COMPILER_ID:GNU>:-static-libstdc++>)
 
 	# PRIVATE to make sure llvm-disas contains everything. With the default PUBLIC, LLVM libraries are propagated to the test-app linkage.
 	target_link_libraries(llvm-disas PRIVATE
