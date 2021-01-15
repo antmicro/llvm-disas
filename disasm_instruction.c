@@ -1,3 +1,9 @@
+//
+// Copyright (c) 2019-2021 Antmicro
+//
+// This file is licensed under the Apache License 2.0.
+// Full license text is available in the 'LICENSE' file.
+//
 #include "llvm-disas.h"
 
 int LLVMDisasmInstruction(void *dc, uint8_t *bytes, uint64_t bytessize, uint64_t pc, char *outString, uint32_t strlen);

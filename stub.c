@@ -1,3 +1,9 @@
+//
+// Copyright (c) 2019-2021 Antmicro
+//
+// This file is licensed under the Apache License 2.0.
+// Full license text is available in the 'LICENSE' file.
+//
 #include <stdio.h>
 
 #define CSTUB(x) void x() { printf("WARNING: stub %s\n", __func__); }
