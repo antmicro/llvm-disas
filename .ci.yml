@@ -27,17 +27,22 @@ linux:
     - apt update
     - apt install -y cmake g++ xz-utils
   <<: *build_script
+  after_script:
+    - ldd shared/libllvm-disas.so
   <<: *build_artifacts
 
 macos:
   tags: ["renode-macos"]
   <<: *build_script
+  after_script:
+    - otool -L shared/libllvm-disas.dylib
   <<: *build_artifacts
 
 windows:
   tags: ["renode-windows"]
   script:
     - bash .ci/windows.sh
+    - ldd shared/libllvm-disas.dll
   artifacts:
     paths:
       - shared/libllvm-disas.dll
