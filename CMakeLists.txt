@@ -49,7 +49,10 @@ else()
 	target_link_libraries(llvm-disas PRIVATE
 		$<$<CXX_COMPILER_ID:GNU>:-Wl,--unresolved-symbols=report-all>
 		$<$<CXX_COMPILER_ID:GNU>:-static-libgcc>
-		$<$<CXX_COMPILER_ID:GNU>:-static-libstdc++>)
+		$<$<CXX_COMPILER_ID:GNU>:-static-libstdc++>
+		# In case it isn't passed to the linker by default (e.g. g++ v8.3.0-6 on Debian 10)
+		$<$<CXX_COMPILER_ID:GNU>:-Wl,--as-needed>
+	)
 
 	# PRIVATE to make sure llvm-disas contains everything. With the default PUBLIC, LLVM libraries are propagated to the test-app linkage.
 	target_link_libraries(llvm-disas PRIVATE
