@@ -13,7 +13,7 @@ project (renode-llvm-disas)
 # Variables describing LLVM libraries
 
 set(LLVM_VERSION	9.0.0)
-set(LLVM_LIBS_DIR	${CMAKE_SOURCE_DIR}/lib/llvm)
+set(LLVM_LIBS_DIR	${CMAKE_SOURCE_DIR}/lib/llvm-${CMAKE_SYSTEM_PROCESSOR})
 set(LLVM_LIBS		AArch64Desc AArch64Disassembler AArch64Info AArch64Utils ARMDesc ARMDisassembler ARMInfo ARMUtils BinaryFormat MC MCDisassembler MipsDesc MipsDisassembler MipsInfo PowerPCDesc PowerPCDisassembler PowerPCInfo RISCVDesc RISCVDisassembler RISCVInfo RISCVUtils SparcDesc SparcDisassembler SparcInfo Support X86Desc X86Disassembler X86Info X86Utils)
 
 # On macOS "sys::PrintStackTrace" needs extra "itaniumDemangle" function from LLVMDemangle library
@@ -98,23 +98,31 @@ if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i
 		file(MAKE_DIRECTORY ${LLVM_LIBS_DIR})
 
 		if(CMAKE_HOST_APPLE)
-			set(LLVM_OS     darwin-apple)
+			set(LLVM_OS     x86_64-darwin-apple)
 			# macOS's tar default behaviour is like on Linux with --wildcards (and using --wildcards causes error)
 			set(TAR_OS_OPTS	"")
 		else()
-			set(LLVM_OS     pc-linux-gnu)
-			set(TAR_OS_OPTS	"--wildcards")
+			if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+				set(LLVM_OS x86_64-pc-linux-gnu)
+			elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+				set(LLVM_OS aarch64-linux-gnu)
+			elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+				set(LLVM_OS armv7a-linux-gnueabihf)
+			else()
+				message(FATAL_ERROR "Invalid CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}!\n    Supported are: `aarch64`, `arm` and `x86_64`.")
+			endif()
+			set(TAR_OS_OPTS "--wildcards")
 		endif()
 
 		if(NOT EXISTS ${LLVM_XZ_PATH})
 			message("Downloading LLVM...")
-			file(DOWNLOAD http://releases.llvm.org/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-${LLVM_OS}.tar.xz ${LLVM_XZ_PATH} SHOW_PROGRESS)
+			file(DOWNLOAD http://releases.llvm.org/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-${LLVM_OS}.tar.xz ${LLVM_XZ_PATH} SHOW_PROGRESS)
 		else()
 			message("Unpacking LLVM from a previously downloaded ${LLVM_XZ_PATH}")
 		endif()
 
 		message("Unpacking LLVM libraries...")
-		execute_process(COMMAND tar xf ${LLVM_XZ_PATH} ${TAR_OS_OPTS} --strip-components=2 "clang+llvm-${LLVM_VERSION}-x86_64-${LLVM_OS}/lib/libLLVM*.a" WORKING_DIRECTORY ${LLVM_LIBS_DIR})
+		execute_process(COMMAND tar xf ${LLVM_XZ_PATH} ${TAR_OS_OPTS} --strip-components=2 "clang+llvm-${LLVM_VERSION}-${LLVM_OS}/lib/libLLVM*.a" WORKING_DIRECTORY ${LLVM_LIBS_DIR})
 
 		file(REMOVE ${LLVM_XZ_PATH})
 	else()
