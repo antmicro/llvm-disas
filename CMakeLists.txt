@@ -76,6 +76,8 @@ endif()
 
 add_executable(test-app test.c)
 target_link_libraries(test-app PRIVATE llvm-disas)
+# Search libraries in a runtime directory (ELFs `RPATH` is set to '$ORIGIN')
+set_target_properties(test-app PROPERTIES BUILD_RPATH_USE_ORIGIN TRUE)
 
 # Use "C++ linker" to link target as LLVM code is written in C++
 set_property(TARGET ${TARGET_LINKING_LLVM_LIBS} PROPERTY LINKER_LANGUAGE "CXX")
