@@ -25,6 +25,7 @@
 
 .build_artifacts: &build_artifacts
   artifacts:
+    name: "llvm-disas-$CI_PIPELINE_ID-$CI_JOB_NAME"
     paths:
       - shared/libllvm-disas.*
       - shared/test-app
