@@ -1,16 +1,23 @@
+.before_script: &before_script
+  before_script:
+    - apt update
+    - apt install -y cmake g++$TOOLCHAIN_SUFFIX xz-utils
+
 .build_script: &build_script
   script:
+    # ":" is a no-op in bash
+    - if [ "$RUN_CTEST" = "true" ]; then CTEST="ctest -v"; else CTEST=":"; fi
     - mkdir shared
     - cd shared
-    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - cmake -DCMAKE_BUILD_TYPE=Release $CMAKE_XVARS ..
     - make VERBOSE=1
-    - ctest -V
+    - $CTEST
     - cd ..
     - mkdir static
     - cd static
-    - cmake -DCMAKE_BUILD_TYPE=Release -DSTATIC_LLVM_DISAS=ON ..
+    - cmake -DCMAKE_BUILD_TYPE=Release $CMAKE_XVARS -DSTATIC_LLVM_DISAS=ON ..
     - make VERBOSE=1
-    - ctest -V
+    - $CTEST
 
 .build_artifacts: &build_artifacts
   artifacts:
@@ -21,11 +28,29 @@
       - static/test-app
     when: always
 
-linux:
+linux-aarch64:
   image: debian:latest
-  before_script:
-    - apt update
-    - apt install -y cmake g++ xz-utils
+  variables:
+    CMAKE_XVARS:      "-DCMAKE_TOOLCHAIN_FILE=../.ci/aarch64-toolchain.cmake"
+    TOOLCHAIN_SUFFIX: "-aarch64-linux-gnu"
+  <<: *before_script
+  <<: *build_script
+  <<: *build_artifacts
+
+linux-arm:
+  image: debian:latest
+  variables:
+    CMAKE_XVARS:      "-DCMAKE_TOOLCHAIN_FILE=../.ci/arm-toolchain.cmake"
+    TOOLCHAIN_SUFFIX: "-arm-linux-gnueabihf"
+  <<: *before_script
+  <<: *build_script
+  <<: *build_artifacts
+
+linux-x86_64:
+  image: debian:latest
+  variables:
+    RUN_CTEST: "true"
+  <<: *before_script
   <<: *build_script
   after_script:
     - ldd shared/libllvm-disas.so
@@ -33,6 +58,8 @@ linux:
 
 macos:
   tags: ["renode-macos"]
+  variables:
+    RUN_CTEST: "true"
   <<: *build_script
   after_script:
     - otool -L shared/libllvm-disas.dylib
