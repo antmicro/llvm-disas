@@ -83,9 +83,9 @@ set_property(TARGET ${TARGET_LINKING_LLVM_LIBS} PROPERTY LINKER_LANGUAGE "CXX")
 # LLVM libraries use POSIX threads
 target_link_libraries(${TARGET_LINKING_LLVM_LIBS} PRIVATE pthread)
 
-# Link openlibm on Linux instead of libm required by LLVM code
+# Link OpenLibm on Linux instead of libm required by LLVM code
 if(${CMAKE_HOST_SYSTEM_NAME} STREQUAL Linux)
-	target_link_libraries(${TARGET_LINKING_LLVM_LIBS} PRIVATE ${CMAKE_SOURCE_DIR}/lib/libopenlibm-Linux.a)
+	target_link_libraries(${TARGET_LINKING_LLVM_LIBS} PRIVATE ${CMAKE_SOURCE_DIR}/lib/openlibm/libopenlibm-Linux-${CMAKE_SYSTEM_PROCESSOR}.a)
 endif()
 
 # Preparing LLVM libraries
