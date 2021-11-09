@@ -160,6 +160,7 @@ if(BUILD_LLVM_LIBS)
         DOWNLOAD_DIR    ${LLVM_LIBS_DIR}
         URL             https://releases.llvm.org/9.0.0/llvm-9.0.0.src.tar.xz
         URL_HASH        SHA512=1bb3341e1d231559b948f1505b33c2e2e03989f9b8bbfef0e0cdaff5ac43f85574c9ec5ac53399b914f497d6899425d861411024e8d7e1d1a338c1c6951ac658
+        PATCH_COMMAND   sh -c "find ${CMAKE_CURRENT_LIST_DIR}/llvm-patches -name '*.patch' | while read -r p $<SEMICOLON> do patch -p2 < \"$p\" $<SEMICOLON> done"
         CMAKE_ARGS      "-DCMAKE_SH=${CMAKE_SH}" "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
         BUILD_COMMAND   ${CMAKE_MAKE_PROGRAM} ${LLVM_MAKE_TARGETS}
         COMMAND         ${CMAKE_COMMAND} -E copy_if_different ${LLVM_BUILD_PATHS} ${LLVM_LIBS_DIR}
@@ -283,6 +284,11 @@ set(ARCH sparc leon3)
 disas(${ARCH} 18a0e885          "restore        %g2, 24, %g2"   )
 disas(${ARCH} 00000001          "nop"                           )
 disas(${ARCH} 47006810          "ba     %xcc, 71"               )
+disas(${ARCH} 0000d881          "flush %g0"                     )
+disas(${ARCH} 0020d881          "flush %g0"                     )
+disas(${ARCH} 0040d881          "flush %g1"                     )
+disas(${ARCH} 2060d881          "flush %g1+32"                  )
+disas(${ARCH} 1c40d881          "flush %g1+%i4"                 )
 
 set(ARCH ppc ppc32)
 disas(${ARCH} 7c000048          "b      .+124"                  )
