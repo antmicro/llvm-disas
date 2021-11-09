@@ -34,7 +34,7 @@
     when: always
 
 linux-aarch64:
-  image: debian:latest
+  image: debian:buster
   variables:
     CMAKE_XVARS:      "-DCMAKE_TOOLCHAIN_FILE=../.ci/aarch64-toolchain.cmake"
     TOOLCHAIN_SUFFIX: "-aarch64-linux-gnu"
@@ -43,7 +43,7 @@ linux-aarch64:
   <<: *build_artifacts
 
 linux-arm:
-  image: debian:latest
+  image: debian:buster
   variables:
     CMAKE_XVARS:      "-DCMAKE_TOOLCHAIN_FILE=../.ci/arm-toolchain.cmake"
     TOOLCHAIN_SUFFIX: "-arm-linux-gnueabihf"
@@ -52,7 +52,7 @@ linux-arm:
   <<: *build_artifacts
 
 linux-x86_64:
-  image: debian:latest
+  image: debian:buster
   variables:
     RUN_CTEST: "true"
   <<: *before_script
