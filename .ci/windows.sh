@@ -16,7 +16,7 @@ PATH="$PWD/mingw64/bin:$PWD/cmake-3.17.3-win64-x64/bin:$PATH"
 # Configure, build and test
 mkdir shared
 cd shared
-cmake .. -G 'MinGW Makefiles' -DCMAKE_BUILD_TYPE=Release -DCMAKE_SH=CMAKE_SH-NOTFOUND
+cmake .. -G 'MinGW Makefiles' -DCMAKE_BUILD_TYPE=Release -DBUILD_LLVM_LIBS=1 -DCMAKE_SH=CMAKE_SH-NOTFOUND
 mingw32-make VERBOSE=1
 
 ctest -V

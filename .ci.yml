@@ -1,11 +1,24 @@
+stages:
+  - native
+  - cross
+
+.before_script_content: &before_script_content |
+  # BUILD_RPATH_USE_ORIGIN is available since CMake 3.14 (unavailable in default repositories)
+  apt update
+  apt install -y ca-certificates
+  echo "deb https://deb.debian.org/debian buster-backports main" >>/etc/apt/sources.list
+  apt update
+  apt install -y cmake/buster-backports g++$TOOLCHAIN_SUFFIX patch python3 xz-utils
+
 .before_script: &before_script
   before_script:
-    # BUILD_RPATH_USE_ORIGIN is available since CMake 3.14 (unavailable in default repositories)
-    - apt update
-    - apt install -y ca-certificates
-    - echo "deb https://deb.debian.org/debian buster-backports main" >>/etc/apt/sources.list
-    - apt update
-    - apt install -y cmake/buster-backports g++$TOOLCHAIN_SUFFIX xz-utils
+    - *before_script_content
+
+.cross_before_script: &cross_before_script
+  before_script:
+    - mv shared host-shared
+    - rm -rf static
+    - *before_script_content
 
 .build_script: &build_script
   script:
@@ -13,13 +26,13 @@
     - if [ "$RUN_CTEST" = "true" ]; then CTEST="ctest -v"; else CTEST=":"; fi
     - mkdir shared
     - cd shared
-    - cmake -DCMAKE_BUILD_TYPE=Release $CMAKE_XVARS ..
+    - cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_LLVM_LIBS=ON $CMAKE_XVARS ..
     - make VERBOSE=1
     - $CTEST
     - cd ..
     - mkdir static
     - cd static
-    - cmake -DCMAKE_BUILD_TYPE=Release $CMAKE_XVARS -DSTATIC_LLVM_DISAS=ON ..
+    - cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_LLVM_LIBS=ON $CMAKE_XVARS -DSTATIC_LLVM_DISAS=ON ..
     - make VERBOSE=1
     - $CTEST
 
@@ -29,29 +42,37 @@
     paths:
       - shared/libllvm-disas.*
       - shared/test-app
+      - shared/llvm-tblgen # Will not be present in the cross stage
       - static/libllvm-disas.a
       - static/test-app
     when: always
 
 linux-aarch64:
+  stage: cross
   image: debian:buster
+  dependencies:
+    - linux-x86_64
   variables:
-    CMAKE_XVARS:      "-DCMAKE_TOOLCHAIN_FILE=../.ci/aarch64-toolchain.cmake"
+    CMAKE_XVARS:      "-DCMAKE_TOOLCHAIN_FILE=../.ci/aarch64-toolchain.cmake -DLLVM_TABLEGEN=$CI_PROJECT_DIR/host-shared/llvm-tblgen"
     TOOLCHAIN_SUFFIX: "-aarch64-linux-gnu"
-  <<: *before_script
+  <<: *cross_before_script
   <<: *build_script
   <<: *build_artifacts
 
 linux-arm:
+  stage: cross
   image: debian:buster
+  dependencies:
+    - linux-x86_64
   variables:
-    CMAKE_XVARS:      "-DCMAKE_TOOLCHAIN_FILE=../.ci/arm-toolchain.cmake"
+    CMAKE_XVARS:      "-DCMAKE_TOOLCHAIN_FILE=../.ci/arm-toolchain.cmake -DLLVM_TABLEGEN=$CI_PROJECT_DIR/host-shared/llvm-tblgen"
     TOOLCHAIN_SUFFIX: "-arm-linux-gnueabihf"
-  <<: *before_script
+  <<: *cross_before_script
   <<: *build_script
   <<: *build_artifacts
 
 linux-x86_64:
+  stage: native
   image: debian:buster
   variables:
     RUN_CTEST: "true"
@@ -62,6 +83,7 @@ linux-x86_64:
   <<: *build_artifacts
 
 macos:
+  stage: native
   tags: ["renode-macos"]
   variables:
     RUN_CTEST: "true"
@@ -71,6 +93,7 @@ macos:
   <<: *build_artifacts
 
 windows:
+  stage: native
   tags: ["renode-windows"]
   script:
     - bash .ci/windows.sh
