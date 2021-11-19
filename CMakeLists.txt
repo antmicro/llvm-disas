@@ -31,8 +31,14 @@ endforeach(LIB)
 add_definitions(-Werror)
 add_definitions(-Wall)
 
+set(LLVM_TABLEGEN "" CACHE STRING "Path to prebuilt llvm-tblgen binary to use, needed when cross-compiling")
+set(LLVM_TABLEGEN_COPY_COMMAND "")
+
 if(NOT CMAKE_HOST_WIN32)
     set(STATIC_LLVM_DISAS OFF CACHE BOOL "Controls whether llvm-disas will be a static library; by default it's a shared library")
+    if(NOT CMAKE_CROSSCOMPILING)
+        set(LLVM_TABLEGEN_COPY_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/llvm-ep-prefix/src/llvm-ep-build/bin/llvm-tblgen ${CMAKE_BINARY_DIR})
+    endif()
 endif()
 
 if(STATIC_LLVM_DISAS)
@@ -155,15 +161,22 @@ if(BUILD_LLVM_LIBS)
         list(APPEND LLVM_BUILD_PATHS  ${CMAKE_BINARY_DIR}/llvm-ep-prefix/src/llvm-ep-build/lib/libLLVM${LIB}.a)
     endforeach(LIB)
 
+    if(LLVM_TABLEGEN)
+        set(LLVM_TABLEGEN_OPTION "-DLLVM_TABLEGEN=${LLVM_TABLEGEN}")
+    else()
+        set(LLVM_TABLEGEN_OPTION "")
+    endif()
+
     include(ExternalProject)
     ExternalProject_Add(llvm-ep
         DOWNLOAD_DIR    ${LLVM_LIBS_DIR}
         URL             https://releases.llvm.org/9.0.0/llvm-9.0.0.src.tar.xz
         URL_HASH        SHA512=1bb3341e1d231559b948f1505b33c2e2e03989f9b8bbfef0e0cdaff5ac43f85574c9ec5ac53399b914f497d6899425d861411024e8d7e1d1a338c1c6951ac658
         PATCH_COMMAND   sh -c "find ${CMAKE_CURRENT_LIST_DIR}/llvm-patches -name '*.patch' | while read -r p $<SEMICOLON> do patch -p2 < \"$p\" $<SEMICOLON> done"
-        CMAKE_ARGS      "-DCMAKE_SH=${CMAKE_SH}" "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+        CMAKE_ARGS      "-DCMAKE_SH=${CMAKE_SH}" "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" "-DCMAKE_TOOLCHAIN_FILE:FILEPATH=${CMAKE_TOOLCHAIN_FILE}" "${LLVM_TABLEGEN_OPTION}"
         BUILD_COMMAND   ${CMAKE_MAKE_PROGRAM} ${LLVM_MAKE_TARGETS}
         COMMAND         ${CMAKE_COMMAND} -E copy_if_different ${LLVM_BUILD_PATHS} ${LLVM_LIBS_DIR}
+        COMMAND         ${LLVM_TABLEGEN_COPY_COMMAND}
         INSTALL_COMMAND ""
         TEST_COMMAND    ""
     )
