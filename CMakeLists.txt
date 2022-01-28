@@ -12,11 +12,11 @@ project (renode-llvm-disas)
 
 # Variables describing LLVM libraries
 
-set(LLVM_SRC_URL    https://releases.llvm.org/9.0.0/llvm-9.0.0.src.tar.xz)
-set(LLVM_SRC_SHA512 1bb3341e1d231559b948f1505b33c2e2e03989f9b8bbfef0e0cdaff5ac43f85574c9ec5ac53399b914f497d6899425d861411024e8d7e1d1a338c1c6951ac658)
+set(LLVM_SRC_URL    https://github.com/llvm/llvm-project/archive/llvmorg-14.0.0-rc1.tar.gz)
+set(LLVM_SRC_SHA512 62aac6a033ef0e321aef5060dcc61eb721b115a9cc1b7570497f72183d9e70a66b5910e90df14428bf56d33a44d4582c919e19f4477c0cfb3209e249b53fe534)
 
 set(LLVM_LIBS_DIR   ${CMAKE_SOURCE_DIR}/cache/${CMAKE_SYSTEM_PROCESSOR})
-set(LLVM_LIBS       AArch64Desc AArch64Disassembler AArch64Info AArch64Utils ARMDesc ARMDisassembler ARMInfo ARMUtils BinaryFormat MC MCDisassembler MipsDesc MipsDisassembler MipsInfo PowerPCDesc PowerPCDisassembler PowerPCInfo RISCVDesc RISCVDisassembler RISCVInfo RISCVUtils SparcDesc SparcDisassembler SparcInfo Support X86Desc X86Disassembler X86Info X86Utils)
+set(LLVM_LIBS       AArch64Desc AArch64Disassembler AArch64Info AArch64Utils ARMDesc ARMDisassembler ARMInfo ARMUtils BinaryFormat MC MCDisassembler MipsDesc MipsDisassembler MipsInfo PowerPCDesc PowerPCDisassembler PowerPCInfo RISCVDesc RISCVDisassembler RISCVInfo SparcDesc SparcDisassembler SparcInfo Support X86Desc X86Disassembler X86Info)
 
 # On macOS "sys::PrintStackTrace" needs extra "itaniumDemangle" function from LLVMDemangle library
 if(CMAKE_HOST_APPLE)
@@ -267,7 +267,7 @@ disas(${ARCH} 18a0e885          "restore        %g2, 24, %g2"   )
 disas(${ARCH} 00000001          "nop"                           )
 disas(${ARCH} 47006810          "ba     %xcc, 71"               )
 disas(${ARCH} 0000d881          "flush %g0"                     )
-disas(${ARCH} 0020d881          "flush %g0"                     )
+disas(${ARCH} 0020d881          "flush 0"                       )
 disas(${ARCH} 0040d881          "flush %g1"                     )
 disas(${ARCH} 2060d881          "flush %g1+32"                  )
 disas(${ARCH} 1c40d881          "flush %g1+%i4"                 )
