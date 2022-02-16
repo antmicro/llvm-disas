@@ -1,11 +1,11 @@
 #
-# Copyright (c) 2019-2021 Antmicro
+# Copyright (c) 2019-2022 Antmicro
 #
 # This file is licensed under the Apache License 2.0.
 # Full license text is available in the 'LICENSE' file.
 
-# Older CMakes have problems downloading LLVM archives
-cmake_minimum_required(VERSION 3.2)
+# Because of `BUILD_RPATH_USE_ORIGIN` target property
+cmake_minimum_required(VERSION 3.14)
 
 project (renode-llvm-disas)
 
@@ -42,9 +42,6 @@ if(NOT CMAKE_HOST_WIN32)
 endif()
 
 if(STATIC_LLVM_DISAS)
-    # Because of using the OBJECT IMPORTED library
-    cmake_minimum_required(VERSION 3.9)
-
     # LLVM objects' paths are specified after extracting them from the LLVM libraries
     add_library(llvm_objs OBJECT IMPORTED)
     add_library(llvm-disas STATIC init.c stub.c create_disasm.c disasm_instruction.c dispose.c $<TARGET_OBJECTS:llvm_objs>)
