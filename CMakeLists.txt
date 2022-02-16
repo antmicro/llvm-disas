@@ -12,7 +12,9 @@ project (renode-llvm-disas)
 
 # Variables describing LLVM libraries
 
-set(LLVM_VERSION   9.0.0)
+set(LLVM_SRC_URL https://releases.llvm.org/9.0.0/llvm-9.0.0.src.tar.xz)
+set(LLVM_SRC_SHA512 1bb3341e1d231559b948f1505b33c2e2e03989f9b8bbfef0e0cdaff5ac43f85574c9ec5ac53399b914f497d6899425d861411024e8d7e1d1a338c1c6951ac658)
+
 set(LLVM_LIBS_DIR  ${CMAKE_SOURCE_DIR}/lib/llvm-${CMAKE_SYSTEM_PROCESSOR})
 set(LLVM_LIBS      AArch64Desc AArch64Disassembler AArch64Info AArch64Utils ARMDesc ARMDisassembler ARMInfo ARMUtils BinaryFormat MC MCDisassembler MipsDesc MipsDisassembler MipsInfo PowerPCDesc PowerPCDisassembler PowerPCInfo RISCVDesc RISCVDisassembler RISCVInfo RISCVUtils SparcDesc SparcDisassembler SparcInfo Support X86Desc X86Disassembler X86Info X86Utils)
 
@@ -24,6 +26,18 @@ endif()
 foreach(LIB ${LLVM_LIBS})
     list(APPEND LLVM_LIB_PATHS ${LLVM_LIBS_DIR}/libLLVM${LIB}.a)
 endforeach(LIB)
+
+set(BUILD_LLVM_LIBS OFF CACHE BOOL "Controls whether LLVM will be built from source; by default '${LLVM_LIBS_DIR}/libLLVM*.a' are used if all required libraries are found.")
+if(NOT BUILD_LLVM_LIBS)
+    # Make sure the directory contains all the required LLVM libraries; otherwise build them all.
+    foreach(LIB ${LLVM_LIB_PATHS})
+        if(NOT EXISTS ${LIB})
+            message(WARNING "A required '${LIB}' library wasn't found! All LLVM libraries will be rebuilt.")
+            set(BUILD_LLVM_LIBS ON)
+            break()
+        endif()
+    endforeach()
+endif()
 
 
 # Define targets
@@ -93,66 +107,10 @@ if(${CMAKE_HOST_SYSTEM_NAME} STREQUAL Linux)
     target_link_libraries(${TARGET_LINKING_LLVM_LIBS} PRIVATE ${CMAKE_SOURCE_DIR}/lib/openlibm/libopenlibm-Linux-${CMAKE_SYSTEM_PROCESSOR}.a)
 endif()
 
-# Preparing LLVM libraries
 
-set(BUILD_LLVM_LIBS OFF CACHE BOOL "Controls whether LLVM will be built from source; by default prebuilt binaries are used")
-
-if(NOT (CMAKE_HOST_WIN32 OR CMAKE_HOST_UNIX))
-    message(FATAL_ERROR "The only supported operating systems are Windows and UNIX-like systems!")
-endif()
-
-if(NOT BUILD_LLVM_LIBS)
-    if(CMAKE_HOST_UNIX)  # "Set to true when the host system is UNIX or UNIX like (i.e. APPLE and CYGWIN)."
-        set(LLVM_XZ_PATH ${CMAKE_SOURCE_DIR}/llvm-${LLVM_VERSION}.tar.xz)
-
-        if(NOT IS_DIRECTORY ${LLVM_LIBS_DIR})
-            message("Necessary LLVM libraries not found...")
-            file(MAKE_DIRECTORY ${LLVM_LIBS_DIR})
-
-            if(CMAKE_HOST_APPLE)
-                set(LLVM_OS     x86_64-darwin-apple)
-                # macOS's tar default behaviour is like on Linux with --wildcards (and using --wildcards causes error)
-                set(TAR_OS_OPTS "")
-            else()
-                if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
-                    set(LLVM_OS x86_64-pc-linux-gnu)
-                elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
-                    set(LLVM_OS aarch64-linux-gnu)
-                elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
-                    set(LLVM_OS armv7a-linux-gnueabihf)
-                else()
-                    message(FATAL_ERROR "Invalid CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}!\n    Supported are: `aarch64`, `arm` and `x86_64`.")
-                endif()
-                set(TAR_OS_OPTS "--wildcards")
-            endif()
-
-            if(NOT EXISTS ${LLVM_XZ_PATH})
-                message("Downloading LLVM...")
-                file(DOWNLOAD http://releases.llvm.org/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-${LLVM_OS}.tar.xz ${LLVM_XZ_PATH} SHOW_PROGRESS)
-            else()
-                message("Unpacking LLVM from a previously downloaded ${LLVM_XZ_PATH}")
-            endif()
-
-            message("Unpacking LLVM libraries...")
-            execute_process(COMMAND tar xf ${LLVM_XZ_PATH} ${TAR_OS_OPTS} --strip-components=2 "clang+llvm-${LLVM_VERSION}-${LLVM_OS}/lib/libLLVM*.a" WORKING_DIRECTORY ${LLVM_LIBS_DIR})
-
-            file(REMOVE ${LLVM_XZ_PATH})
-        else()
-            message("Using LLVM from ${LLVM_LIBS_DIR} directory")
-        endif()
-    elseif(CMAKE_HOST_WIN32)
-        foreach(LIB ${LLVM_LIB_PATHS})
-            if(NOT EXISTS ${LIB})
-                message("At least one of the 'libLLVM*.a' libraries doesn't exist!")
-                set(BUILD_LLVM_LIBS ON)
-                break()
-            endif()
-        endforeach()
-    endif()
-endif()
+# Build LLVM libraries
 
 if(BUILD_LLVM_LIBS)
-    message("LLVM libraries will be created as a part of this build.")
     foreach(LIB ${LLVM_LIBS})
         list(APPEND LLVM_MAKE_TARGETS LLVM${LIB})
         list(APPEND LLVM_BUILD_PATHS  ${CMAKE_BINARY_DIR}/llvm-ep-prefix/src/llvm-ep-build/lib/libLLVM${LIB}.a)
@@ -167,8 +125,8 @@ if(BUILD_LLVM_LIBS)
     include(ExternalProject)
     ExternalProject_Add(llvm-ep
         DOWNLOAD_DIR    ${LLVM_LIBS_DIR}
-        URL             https://releases.llvm.org/9.0.0/llvm-9.0.0.src.tar.xz
-        URL_HASH        SHA512=1bb3341e1d231559b948f1505b33c2e2e03989f9b8bbfef0e0cdaff5ac43f85574c9ec5ac53399b914f497d6899425d861411024e8d7e1d1a338c1c6951ac658
+        URL             ${LLVM_SRC_URL}
+        URL_HASH        SHA512=${LLVM_SRC_SHA512}
         PATCH_COMMAND   sh -c "find ${CMAKE_CURRENT_LIST_DIR}/llvm-patches -name '*.patch' | while read -r p $<SEMICOLON> do patch -p2 < \"$p\" $<SEMICOLON> done"
         CMAKE_ARGS      "-DCMAKE_SH=${CMAKE_SH}" "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" "-DCMAKE_TOOLCHAIN_FILE:FILEPATH=${CMAKE_TOOLCHAIN_FILE}" "${LLVM_TABLEGEN_OPTION}"
         BUILD_COMMAND   ${CMAKE_MAKE_PROGRAM} ${LLVM_MAKE_TARGETS}
@@ -182,7 +140,7 @@ if(BUILD_LLVM_LIBS)
 endif()
 
 
-# Extract LLVM objects to combine into the one static library
+# Extract LLVM objects to combine into a single static library
 
 if(STATIC_LLVM_DISAS)
     set(LLVM_OBJS_DIR ${CMAKE_BINARY_DIR}/obj)
