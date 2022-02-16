@@ -225,6 +225,14 @@ disas(${ARCH} 580123d3          "fsqrt.s        ft7, ft2, rdn"  ) # rv32f
 disas(${ARCH} 5a0123d3          "fsqrt.d        ft7, ft2, rdn"  ) # rv32d
 disas(${ARCH} eabc              "fsw            fa5, 80(a3)"    ) # rv32c
 
+set(ARCH riscv32 rv32v)
+disas(${ARCH} 76123057          "vmsle.vi       v0, v1, 4"      )
+disas(${ARCH} 0c367057          "vsetvli        zero, a2, e8, m8, ta, ma" )
+disas(${ARCH} 03058407          "vle8ff.v       v8, (a1)"       )
+disas(${ARCH} 628030d7          "vmseq.vi       v1, v8, 0"      )
+disas(${ARCH} 4218a757          "vfirst.m       a4, v1"         )
+disas(${ARCH} 5210a057          "vmsbf.m        v0, v1"         )
+
 set(ARCH riscv64 generic-rv64) # rv64i
 disas(${ARCH} 000a3a83          "ld     s5, 0(s4)"              )
 disas(${ARCH} abcd8a9b          "addiw  s5, s11, -1348"         )
@@ -242,6 +250,14 @@ disas(${ARCH} e705b52f          "amomaxu.d.aqrl a0, a6, (a1)"   ) # rv64a
 disas(${ARCH} d0312353          "fcvt.s.lu      ft6, sp, rdn"   ) # rv64f
 disas(${ARCH} d2312353          "fcvt.d.lu      ft6, sp, rdn"   ) # rv64d
 disas(${ARCH} eabc              "sd             a5, 80(a3)"     ) # rv64c
+
+set(ARCH riscv64 rv64v)
+disas(${ARCH} 76123057          "vmsle.vi       v0, v1, 4"      )
+disas(${ARCH} 0c367057          "vsetvli        zero, a2, e8, m8, ta, ma" )
+disas(${ARCH} 03058407          "vle8ff.v       v8, (a1)"       )
+disas(${ARCH} 628030d7          "vmseq.vi       v1, v8, 0"      )
+disas(${ARCH} 4218a757          "vfirst.m       a4, v1"         )
+disas(${ARCH} 5210a057          "vmsbf.m        v0, v1"         )
 
 set(ARCH thumb cortex-m4)
 disas(${ARCH} 0403f023440b43d1  "mvns   r1, r2          add     r3, r1          bic     r4, r3, #3"     )
