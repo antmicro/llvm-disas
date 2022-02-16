@@ -125,12 +125,23 @@ if(BUILD_LLVM_LIBS)
         set(LLVM_TABLEGEN_OPTION "")
     endif()
 
+    if("${LLVM_SRC_URL}" MATCHES "releases.*llvm-[0-9]")
+        # The 'llvm-$VERSION' source archives published with a release have 'llvm' contents only.
+        set(LLVM_SRC_SUBDIR  .)
+        set(LLVM_PATCH_LEVEL 2)
+    else()
+        # GH repository archives for 'llvm-project' contain clang, llvm etc. directories.
+        set(LLVM_SRC_SUBDIR  llvm)
+        set(LLVM_PATCH_LEVEL 1)
+    endif()
+    
     include(ExternalProject)
     ExternalProject_Add(llvm-ep
         DOWNLOAD_DIR    ${CMAKE_SOURCE_DIR}/cache
         URL             ${LLVM_SRC_URL}
         URL_HASH        SHA512=${LLVM_SRC_SHA512}
-        PATCH_COMMAND   sh -c "find ${CMAKE_CURRENT_LIST_DIR}/llvm-patches -name '*.patch' | while read -r p $<SEMICOLON> do patch -p2 < \"$p\" $<SEMICOLON> done"
+        SOURCE_SUBDIR   ${LLVM_SRC_SUBDIR}
+        PATCH_COMMAND   sh -c "find ${CMAKE_CURRENT_LIST_DIR}/llvm-patches -name '*.patch' | while read -r p $<SEMICOLON> do patch -p${LLVM_PATCH_LEVEL} < \"$p\" $<SEMICOLON> done"
         CMAKE_ARGS      "-DCMAKE_SH=${CMAKE_SH}" "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" "-DCMAKE_TOOLCHAIN_FILE:FILEPATH=${CMAKE_TOOLCHAIN_FILE}" "${LLVM_TABLEGEN_OPTION}"
         BUILD_COMMAND   ${CMAKE_MAKE_PROGRAM} ${LLVM_MAKE_TARGETS}
         COMMAND         ${CMAKE_COMMAND} -E copy_if_different ${LLVM_BUILD_PATHS} ${LLVM_LIBS_DIR}
@@ -138,7 +149,7 @@ if(BUILD_LLVM_LIBS)
         INSTALL_COMMAND ""
         TEST_COMMAND    ""
     )
-
+    
     add_dependencies(llvm-disas llvm-ep)
 endif()
 
