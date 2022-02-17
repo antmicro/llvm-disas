@@ -21,6 +21,7 @@ variables:
 
 .build_script: &build_script
   script:
+    - set -ex
     # ":" is a no-op in bash
     - if [ "$RUN_CTEST" = "true" ]; then CTEST="ctest -V"; else CTEST=":"; fi
     - mkdir shared
