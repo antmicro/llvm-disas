@@ -15,7 +15,7 @@ The following *LLVM CPU architecture groups* (e.g. *X86* groups at least *i386*,
 - *Sparc*
 - *X86*
 
-Support for a given CPU architecture depends on whether the appropriate ``LLVMInitialize{ARCHGROUP}*`` functions are wrapped by the library (and appropriate ``libLLVM${ARCHGROUP}*`` libraries linked during building).
+Support for a given CPU architecture depends on whether the appropriate ``LLVMInitialize<ARCHGROUP>*`` functions are wrapped by the library (and appropriate ``libLLVM<ARCHGROUP>*`` libraries linked during building).
 
 Building
 --------
@@ -52,9 +52,9 @@ Windows
 +++++++
 
 For now, the only fully tested Windows *CMake* generator is *"MinGW Makefiles"*, which is not the default one.
-To run *CMake* specifying the generator, run it with the ``-G [GENERATOR]`` flag::
+To run *CMake* specifying the generator, run it with the ``-G <GENERATOR>`` flag::
 
-   cmake.exe [PATH_TO_SOURCE] -G "MinGW Makefiles"
+   cmake.exe <REPOSITORY_ROOT> -G "MinGW Makefiles"
 
 and then build it using ``mingw32-make.exe``.
 It has to be done in a clean build directory because after the first run and creation of ``CMakeCache.txt``, the generator can't be changed.
@@ -66,7 +66,7 @@ Unfortunately, the *"MinGW Makefiles"* generator doesn't like it when ``sh.exe``
 However, generation of *"MinGW Makefiles"* worked well during testing after suppressing that warning.
 So if you encounter such an error::
 
-        CMake Error at {CMAKE_PATH}/Modules/CMakeMinGWFindMake.cmake:12 (message):
+        CMake Error at <CMAKE_PATH>/Modules/CMakeMinGWFindMake.cmake:12 (message):
           sh.exe was found in your PATH, here:
 
           C:/cygwin64/bin/sh.exe
@@ -85,7 +85,7 @@ So if you encounter such an error::
         CMake Error: CMAKE_CXX_COMPILER not set, after EnableLanguage
         -- Configuring incomplete, errors occurred!
 
-try using *CMake* with an additional ``-DCMAKE_SH="CMAKE_SH-NOTFOUND`` switch.
+try using *CMake* with an additional ``-DCMAKE_SH="CMAKE_SH-NOTFOUND"`` switch.
 It's only needed for the first run of *CMake*.
 
 Testing
@@ -96,7 +96,7 @@ The ``test-app`` testing executable provides a way to test the ``llvm-disas`` li
 Manual testing
 ++++++++++++++
 
-``test-app`` can be executed manually with the ``{cpu-arch} {cpu-model} {block}`` arguments.
+``test-app`` can be executed manually with the ``<cpu-arch> <cpu-model> <block>`` arguments.
 The first two arguments indicate the cpu architecture (e.g. ``riscv64``) and the cpu model (e.g. ``generic-rv64``), respectively, and are based on the *LLVM* naming.
 
 The third argument is used to pass a block of the machine code to disassemble, represented as a string containing hexadecimal digits (doesn't have to be prefixed with ``0x``).
