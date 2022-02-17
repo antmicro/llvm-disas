@@ -51,5 +51,8 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# Exceptions
+# Include all OpenLibm files
 !lib/openlibm/*
+
+# LLVM sources and built LLVM libraries
+cache/*
