@@ -3,12 +3,8 @@ stages:
   - cross
 
 .before_script_content: &before_script_content |
-  # BUILD_RPATH_USE_ORIGIN is available since CMake 3.14 (unavailable in default repositories)
   apt update
-  apt install -y ca-certificates
-  echo "deb https://deb.debian.org/debian buster-backports main" >>/etc/apt/sources.list
-  apt update
-  apt install -y cmake/buster-backports g++$TOOLCHAIN_SUFFIX patch python3 xz-utils
+  apt install -y cmake g++$TOOLCHAIN_SUFFIX patch python3 xz-utils
 
 .before_script: &before_script
   before_script:
@@ -49,7 +45,7 @@ stages:
 
 linux-aarch64:
   stage: cross
-  image: debian:buster
+  image: debian:bullseye
   dependencies:
     - linux-x86_64
   variables:
@@ -61,7 +57,7 @@ linux-aarch64:
 
 linux-arm:
   stage: cross
-  image: debian:buster
+  image: debian:bullseye
   dependencies:
     - linux-x86_64
   variables:
@@ -73,7 +69,7 @@ linux-arm:
 
 linux-x86_64:
   stage: native
-  image: debian:buster
+  image: debian:bullseye
   variables:
     RUN_CTEST: "true"
   <<: *before_script
