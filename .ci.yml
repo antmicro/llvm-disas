@@ -19,7 +19,7 @@ stages:
 .build_script: &build_script
   script:
     # ":" is a no-op in bash
-    - if [ "$RUN_CTEST" = "true" ]; then CTEST="ctest -v"; else CTEST=":"; fi
+    - if [ "$RUN_CTEST" = "true" ]; then CTEST="ctest -V"; else CTEST=":"; fi
     - mkdir shared
     - cd shared
     - cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_LLVM_LIBS=ON $CMAKE_XVARS ..
