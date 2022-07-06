@@ -150,7 +150,7 @@ if(BUILD_LLVM_LIBS)
         INSTALL_COMMAND ""
         TEST_COMMAND    ""
     )
-    
+
     add_dependencies(llvm-disas llvm-ep)
 endif()
 
