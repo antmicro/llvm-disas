@@ -4,6 +4,10 @@
 // This file is licensed under the Apache License 2.0.
 // Full license text is available in the 'LICENSE' file.
 //
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 // Flags for llvm_create_disasm_cpu_with_flags
@@ -33,3 +37,7 @@ void *llvm_create_disasm_cpu(const char *tripleName, const char *cpu);
 int llvm_disasm_instruction(void *dc, uint8_t *bytes, uint64_t bytessize, char *outString, uint32_t strlen);
 
 void llvm_disasm_dispose(void *dc);
+
+#ifdef __cplusplus
+}
+#endif
