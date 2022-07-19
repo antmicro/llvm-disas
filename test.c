@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019-2021 Antmicro
+// Copyright (c) 2019-2024 Antmicro
 //
 // This file is licensed under the Apache License 2.0.
 // Full license text is available in the 'LICENSE' file.
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
     unsigned int size = 0;
     uint64_t bytes = strtohex64(argv[3], &size);
 
-    void *dc = llvm_create_disasm_cpu(argv[1], argv[2]);
+    void *dc = llvm_create_disasm_cpu_with_flags(argv[1], argv[2], 0);
     if (dc == NULL)
     {
         fprintf(stderr, "Error creating context (invalid {cpu-arch}?).\n");

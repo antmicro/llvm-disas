@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019-2021 Antmicro
+// Copyright (c) 2019-2024 Antmicro
 //
 // This file is licensed under the Apache License 2.0.
 // Full license text is available in the 'LICENSE' file.
@@ -13,6 +13,10 @@
 void *LLVMCreateDisasmCPU(const char *tripleName, const char *cpu, void *disInfo, int tagType, void *getOpInfo, void *symbolLookUp);
 
 void *LLVMCreateDisasmCPUFeatures(const char *tripleName, const char *cpu, const char *features, void *disInfo, int tagType, void *getOpInfo, void *symbolLookUp);
+
+int LLVMSetDisasmOptions(void *dc, uint64_t options);
+
+#define LLVMDisassembler_Option_AsmPrinterVariant 4
 
 // Allow even more than possible unique features in case of some duplicates.
 #define MAX_FEATURES 100
@@ -73,7 +77,7 @@ void init_llvm_architecture(const char *arch){
     }
 }
 
-void *llvm_create_disasm_cpu(const char *tripleName, const char *cpu)
+void *llvm_create_disasm_cpu_with_flags(const char *tripleName, const char *cpu, uint32_t flags)
 {
     // Initializing LLVM architectures multiple times doesn't seem to cause any problems
     init_llvm_architecture(tripleName);
@@ -85,5 +89,19 @@ void *llvm_create_disasm_cpu(const char *tripleName, const char *cpu)
         }
     }
 
-    return LLVMCreateDisasmCPU(tripleName, cpu, NULL, 0, NULL, NULL);
+    void *dc = LLVMCreateDisasmCPU(tripleName, cpu, NULL, 0, NULL, NULL);
+    if (!dc) {
+        return NULL;
+    }
+
+    if (flags & ASM_ALTERNATE_DIALECT) {
+        LLVMSetDisasmOptions(dc, LLVMDisassembler_Option_AsmPrinterVariant);
+    }
+
+    return dc;
+}
+
+void *llvm_create_disasm_cpu(const char *tripleName, const char *cpu)
+{
+    return llvm_create_disasm_cpu_with_flags(tripleName, cpu, 0);
 }
