@@ -4,6 +4,8 @@
 // This file is licensed under the Apache License 2.0.
 // Full license text is available in the 'LICENSE' file.
 //
+#include <ctype.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,29 +15,43 @@
 
 #include "llvm-disas.h"
 
-uint64_t strtohex64(const char *str, unsigned int *size)
+int unhexnibble(char hex)
 {
-    errno = 0;
-    char *endptr;
+    hex = tolower(hex);
+    if (hex >= '0' && hex <= '9') {
+        return hex - '0';
+    } else if (hex >= 'a' && hex <= 'f') {
+        return hex - 'a' + 0xa;
+    } else {
+        return -1;
+    }
+}
 
-    uint64_t hex = (uint64_t) strtoull(str, &endptr, 16);
+ssize_t unhexdump(const char *str, uint8_t *out, size_t max_out_size)
+{
+    ssize_t nib_idx = 0;
 
-    if (errno != 0) {
-        perror("strtohex64");
-        exit(EXIT_FAILURE);
-    } else if (endptr == str) {
-        fprintf(stderr, "strtohex64: '%s' is not a valid HEX number!\n", str);
-        exit(EXIT_FAILURE);
+    memset(out, 0, max_out_size);
+
+    while (*str && nib_idx / 2 < max_out_size) {
+        if (isspace(*str)) {
+            ++str;
+            continue;
+        }
+
+        int nib = unhexnibble(*str);
+        if (nib < 0) {
+            return -1;
+        }
+
+        // We number the nibbles from left to right as in a displayed number, so high nibbles are at even indices
+        bool high_nibble = nib_idx % 2 == 0;
+        out[nib_idx / 2] |= nib << (high_nibble ? 4 : 0);
+        ++nib_idx;
+        ++str;
     }
 
-    unsigned int len = (unsigned int) (endptr - str);
-    if (len % 2 != 0) {
-        len++;
-    }
-
-    *size = len / 2;
-
-    return hex;
+    return (nib_idx + 1) / 2;
 }
 
 char hexnibble(uint8_t nibble)
@@ -84,8 +100,12 @@ void do_assemble(int argc, char **argv, uint32_t flags)
 
 void do_disassemble(int argc, char **argv)
 {
-    unsigned int size = 0;
-    uint64_t bytes = strtohex64(argv[2], &size);
+    uint8_t bytes[1024];
+    ssize_t size = unhexdump(argv[2], bytes, sizeof(bytes));
+    if (size < 0) {
+        fprintf(stderr, "'%s' is not a valid hex string\n", argv[2]);
+        exit(EXIT_FAILURE);
+    }
 
     void *dc = llvm_create_disasm_cpu_with_flags(argv[0], argv[1], 0);
     if (dc == NULL)
@@ -142,7 +162,7 @@ int main(int argc, char **argv)
 
     if (argc != 3) {
         fprintf(stderr, "Usage: %s [-ad] {cpu-arch} {cpu-model} {block}\n", program);
-        fprintf(stderr, "  {block} must be a valid HEX (max 8B) when disassembling\n");
+        fprintf(stderr, "  {block} must be a valid HEX string when disassembling\n");
         fprintf(stderr, "  {block} must be valid assembly code when assembling\n");
         fprintf(stderr, "  -a: assemble (default: disassemble)\n");
         fprintf(stderr, "  -d: use alternate assembly dialect (for x86: Intel syntax)\n");

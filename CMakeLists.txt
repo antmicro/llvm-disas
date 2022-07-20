@@ -197,7 +197,7 @@ enable_testing()
 add_test(NAME info COMMAND test-app)
 set_tests_properties(info PROPERTIES PASS_REGULAR_EXPRESSION "^Usage:")
 
-function(disas triple cpu code result)
+function(disassemble triple cpu code result)
     set(TEST_NAME ${triple}_${cpu}_${code})
     add_test(NAME ${TEST_NAME} COMMAND test-app ${triple} ${cpu} ${code})
 
@@ -217,99 +217,100 @@ function(disas triple cpu code result)
     string(REGEX REPLACE " +" "[\ \t\n]*" RES_ESC ${RES_ESC})
 
     set_tests_properties(${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "^\t${RES_ESC}\n$")
-endfunction(disas)
+endfunction(disassemble)
 
 
 set(ARCH riscv32 generic-rv32) # rv32i
-disas(${ARCH} 1023002300020493  "mv     s1, tp          sb      sp, 256(t1)"    )
-disas(${ARCH} 0002049340848433  "sub    s0, s1, s0      mv      s1, tp"         )
-disas(${ARCH} 2049340848433     "sub    s0, s1, s0"             )
-disas(${ARCH} 40848433          "sub    s0, s1, s0"             )
-disas(${ARCH} 01212823          "sw     s2, 16(sp)"             )
-disas(${ARCH} 00b785b3          "add    a1, a5, a1"             )
-disas(${ARCH} 00008297          "auipc  t0, 8"                  )
+disassemble(${ARCH} 9304020023002310  "mv     s1, tp\n          sb      sp, 256(t1)"    )
+disassemble(${ARCH} 3384844093040200  "sub    s0, s1, s0\n      mv      s1, tp"         )
+# The partial instruction (3 bytes) will be ignored
+disassemble(${ARCH} 33848440930402    "sub    s0, s1, s0"             )
+disassemble(${ARCH} 33848440          "sub    s0, s1, s0"             )
+disassemble(${ARCH} 23282101          "sw     s2, 16(sp)"             )
+disassemble(${ARCH} b385b700          "add    a1, a5, a1"             )
+disassemble(${ARCH} 97820000          "auipc  t0, 8"                  )
 # Zifencei and Zicsr extensions don't need to be enabled
-disas(${ARCH} 0000100F          "fence.i        "               ) # Zifencei
-disas(${ARCH} 3401f173          "csrrci sp, mscratch, 3"        ) # Zicsr
+disassemble(${ARCH} 0f100000          "fence.i        "               ) # Zifencei
+disassemble(${ARCH} 73f10134          "csrrci sp, mscratch, 3"        ) # Zicsr
 
 set(ARCH riscv32 rv32imafdc) # The same as rv32gc
-disas(${ARCH} 02ab5c33          "divu           s8, s6, a0"     ) # rv32m
-disas(${ARCH} 0805252f          "amoswap.w      a0, zero, (a0)" ) # rv32a
-disas(${ARCH} 580123d3          "fsqrt.s        ft7, ft2, rdn"  ) # rv32f
-disas(${ARCH} 5a0123d3          "fsqrt.d        ft7, ft2, rdn"  ) # rv32d
-disas(${ARCH} eabc              "fsw            fa5, 80(a3)"    ) # rv32c
+disassemble(${ARCH} 335cab02          "divu           s8, s6, a0"     ) # rv32m
+disassemble(${ARCH} 2f250508          "amoswap.w      a0, zero, (a0)" ) # rv32a
+disassemble(${ARCH} d3230158          "fsqrt.s        ft7, ft2, rdn"  ) # rv32f
+disassemble(${ARCH} d323015a          "fsqrt.d        ft7, ft2, rdn"  ) # rv32d
+disassemble(${ARCH} bcea              "fsw            fa5, 80(a3)"    ) # rv32c
 
 set(ARCH riscv32 rv32gc) # The same as rv32imafdc
-disas(${ARCH} 02ab5c33          "divu           s8, s6, a0"     ) # rv32m
-disas(${ARCH} 0805252f          "amoswap.w      a0, zero, (a0)" ) # rv32a
-disas(${ARCH} 580123d3          "fsqrt.s        ft7, ft2, rdn"  ) # rv32f
-disas(${ARCH} 5a0123d3          "fsqrt.d        ft7, ft2, rdn"  ) # rv32d
-disas(${ARCH} eabc              "fsw            fa5, 80(a3)"    ) # rv32c
+disassemble(${ARCH} 335cab02          "divu           s8, s6, a0"     ) # rv32m
+disassemble(${ARCH} 2f250508          "amoswap.w      a0, zero, (a0)" ) # rv32a
+disassemble(${ARCH} d3230158          "fsqrt.s        ft7, ft2, rdn"  ) # rv32f
+disassemble(${ARCH} d323015a          "fsqrt.d        ft7, ft2, rdn"  ) # rv32d
+disassemble(${ARCH} bcea              "fsw            fa5, 80(a3)"    ) # rv32c
 
-set(ARCH riscv32 rv32v)
-disas(${ARCH} 76123057          "vmsle.vi       v0, v1, 4"      )
-disas(${ARCH} 0c367057          "vsetvli        zero, a2, e8, m8, ta, ma" )
-disas(${ARCH} 03058407          "vle8ff.v       v8, (a1)"       )
-disas(${ARCH} 628030d7          "vmseq.vi       v1, v8, 0"      )
-disas(${ARCH} 4218a757          "vfirst.m       a4, v1"         )
-disas(${ARCH} 5210a057          "vmsbf.m        v0, v1"         )
+set(ARCH riscv32 rv32iv)
+disassemble(${ARCH} 57301276          "vmsle.vi       v0, v1, 4"      )
+disassemble(${ARCH} 5770360c          "vsetvli        zero, a2, e8, m8, ta, ma" )
+disassemble(${ARCH} 07840503          "vle8ff.v       v8, (a1)"       )
+disassemble(${ARCH} d7308062          "vmseq.vi       v1, v8, 0"      )
+disassemble(${ARCH} 57a71842          "vfirst.m       a4, v1"         )
+disassemble(${ARCH} 57a01052          "vmsbf.m        v0, v1"         )
 
 set(ARCH riscv64 generic-rv64) # rv64i
-disas(${ARCH} 000a3a83          "ld     s5, 0(s4)"              )
-disas(${ARCH} abcd8a9b          "addiw  s5, s11, -1348"         )
+disassemble(${ARCH} 833a0a00          "ld     s5, 0(s4)"              )
+disassemble(${ARCH} 9b8acdab          "addiw  s5, s11, -1348"         )
 
 set(ARCH riscv64 rv64imafdc) # The same as rv64gc
-disas(${ARCH} 02ab7c3b          "remuw          s8, s6, a0"     ) # rv64m
-disas(${ARCH} e705b52f          "amomaxu.d.aqrl a0, a6, (a1)"   ) # rv64a
-disas(${ARCH} d0312353          "fcvt.s.lu      ft6, sp, rdn"   ) # rv64f
-disas(${ARCH} d2312353          "fcvt.d.lu      ft6, sp, rdn"   ) # rv64d
-disas(${ARCH} eabc              "sd             a5, 80(a3)"     ) # rv64c
+disassemble(${ARCH} 3b7cab02          "remuw          s8, s6, a0"     ) # rv64m
+disassemble(${ARCH} 2fb505e7          "amomaxu.d.aqrl a0, a6, (a1)"   ) # rv64a
+disassemble(${ARCH} 532331d0          "fcvt.s.lu      ft6, sp, rdn"   ) # rv64f
+disassemble(${ARCH} 532331d2          "fcvt.d.lu      ft6, sp, rdn"   ) # rv64d
+disassemble(${ARCH} bcea              "sd             a5, 80(a3)"     ) # rv64c
 
 set(ARCH riscv64 rv64gc) # The same as rv64imafdc
-disas(${ARCH} 02ab7c3b          "remuw          s8, s6, a0"     ) # rv64m
-disas(${ARCH} e705b52f          "amomaxu.d.aqrl a0, a6, (a1)"   ) # rv64a
-disas(${ARCH} d0312353          "fcvt.s.lu      ft6, sp, rdn"   ) # rv64f
-disas(${ARCH} d2312353          "fcvt.d.lu      ft6, sp, rdn"   ) # rv64d
-disas(${ARCH} eabc              "sd             a5, 80(a3)"     ) # rv64c
+disassemble(${ARCH} 3b7cab02          "remuw          s8, s6, a0"     ) # rv64m
+disassemble(${ARCH} 2fb505e7          "amomaxu.d.aqrl a0, a6, (a1)"   ) # rv64a
+disassemble(${ARCH} 532331d0          "fcvt.s.lu      ft6, sp, rdn"   ) # rv64f
+disassemble(${ARCH} 532331d2          "fcvt.d.lu      ft6, sp, rdn"   ) # rv64d
+disassemble(${ARCH} bcea              "sd             a5, 80(a3)"     ) # rv64c
 
-set(ARCH riscv64 rv64v)
-disas(${ARCH} 76123057          "vmsle.vi       v0, v1, 4"      )
-disas(${ARCH} 0c367057          "vsetvli        zero, a2, e8, m8, ta, ma" )
-disas(${ARCH} 03058407          "vle8ff.v       v8, (a1)"       )
-disas(${ARCH} 628030d7          "vmseq.vi       v1, v8, 0"      )
-disas(${ARCH} 4218a757          "vfirst.m       a4, v1"         )
-disas(${ARCH} 5210a057          "vmsbf.m        v0, v1"         )
+set(ARCH riscv64 rv64iv)
+disassemble(${ARCH} 57301276          "vmsle.vi       v0, v1, 4"      )
+disassemble(${ARCH} 5770360c          "vsetvli        zero, a2, e8, m8, ta, ma" )
+disassemble(${ARCH} 07840503          "vle8ff.v       v8, (a1)"       )
+disassemble(${ARCH} d7308062          "vmseq.vi       v1, v8, 0"      )
+disassemble(${ARCH} 57a71842          "vfirst.m       a4, v1"         )
+disassemble(${ARCH} 57a01052          "vmsbf.m        v0, v1"         )
 
 set(ARCH thumb cortex-m4)
-disas(${ARCH} 0403f023440b43d1  "mvns   r1, r2          add     r3, r1          bic     r4, r3, #3"     )
-disas(${ARCH} 200f2c2           "movt   r2, #8192"              )
-disas(${ARCH} 58c8              "ldr    r0, [r1, r3]"           )
-disas(${ARCH} 426df44f          "mov.w  r2, #60672"             )
-disas(${ARCH} 10b6              "asrs   r6, r6, #2"             )
+disassemble(${ARCH} d1430b4423f00304  "mvns   r1, r2\n  add     r3, r1\n  bic     r4, r3, #3" )
+disassemble(${ARCH} c2f20002          "movt   r2, #8192"              )
+disassemble(${ARCH} c858              "ldr    r0, [r1, r3]"           )
+disassemble(${ARCH} 4ff46d42          "mov.w  r2, #60672"             )
+disassemble(${ARCH} b610              "asrs   r6, r6, #2"             )
 
 set(ARCH arm arm926ej-s)
-disas(${ARCH} 32855001          "addlo  r5, r5, #1"             )
-disas(${ARCH} e1b00a00          "lsls   r0, r0, #20"            )
-disas(${ARCH} 1a00000a          "bne    #40"                    )
+disassemble(${ARCH} 01508532          "addlo  r5, r5, #1"             )
+disassemble(${ARCH} 000ab0e1          "lsls   r0, r0, #20"            )
+disassemble(${ARCH} 0a00001a          "bne    #40"                    )
 
 set(ARCH i386 i386)
-disas(${ARCH} 140c7b6b          "imull  $20, 12(%ebx), %edi"    )
-disas(${ARCH} 45                "incl   %ebp"                   )
-disas(${ARCH} c0b70f            "movzwl %ax, %eax"              )
-disas(${ARCH} 00fda916c50c8966  "movw   %cx, 16623894(,%eax,8)" )
-disas(${ARCH} 00fc005e1d010f    "lidtl  16515166"               )
+disassemble(${ARCH} 6b7b0c14          "imull  $20, 12(%ebx), %edi"    )
+disassemble(${ARCH} 45                "incl   %ebp"                   )
+disassemble(${ARCH} 0fb7c0            "movzwl %ax, %eax"              )
+disassemble(${ARCH} 66890cc516a9fd00  "movw   %cx, 16623894(,%eax,8)" )
+disassemble(${ARCH} 0f011d5e00fc00    "lidtl  16515166"               )
 
 set(ARCH sparc leon3)
-disas(${ARCH} 18a0e885          "restore        %g2, 24, %g2"   )
-disas(${ARCH} 00000001          "nop"                           )
-disas(${ARCH} 47006810          "ba     %xcc, 71"               )
-disas(${ARCH} 0000d881          "flush %g0"                     )
-disas(${ARCH} 0020d881          "flush 0"                       )
-disas(${ARCH} 0040d881          "flush %g1"                     )
-disas(${ARCH} 2060d881          "flush %g1+32"                  )
-disas(${ARCH} 1c40d881          "flush %g1+%i4"                 )
+disassemble(${ARCH} 85e8a018          "restore        %g2, 24, %g2"   )
+disassemble(${ARCH} 01000000          "nop"                           )
+disassemble(${ARCH} 10680047          "ba     %xcc, 71"               )
+disassemble(${ARCH} 81d80000          "flush %g0"                     )
+disassemble(${ARCH} 81d82000          "flush 0"                       )
+disassemble(${ARCH} 81d84000          "flush %g1"                     )
+disassemble(${ARCH} 81d86020          "flush %g1+32"                  )
+disassemble(${ARCH} 81d8401c          "flush %g1+%i4"                 )
 
 set(ARCH ppc ppc32)
-disas(${ARCH} 7c000048          "b      .+124"                  )
-disas(${ARCH} 4000887f          "cmplw  7, 8, 0"                )
-disas(${ARCH} 3400e47c          "cntlzw 4, 7"                   )
+disassemble(${ARCH} 4800007c          "b      .+124"                  )
+disassemble(${ARCH} 7f880040          "cmplw  7, 8, 0"                )
+disassemble(${ARCH} 7ce40034          "cntlzw 4, 7"                   )

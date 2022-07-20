@@ -100,7 +100,6 @@ Manual testing
 The first two arguments indicate the cpu architecture (e.g. ``riscv64``) and the cpu model (e.g. ``generic-rv64``), respectively, and are based on the *LLVM* naming.
 
 The third argument is used to pass a block of the machine code to disassemble, represented as a string containing hexadecimal digits (doesn't have to be prefixed with ``0x``).
-In a single execution, ``test-app`` can disassemble up to 8B of machine code (up to 16 hex digits), which may contain multiple instructions.
 
 Automatic testing 
 +++++++++++++++++
