@@ -79,13 +79,13 @@ char *hexdump(const uint8_t *data, size_t size)
     return out;
 }
 
-void do_assemble(int argc, char **argv, uint32_t flags)
+void do_assemble(int argc, char **argv, uint32_t flags, uint64_t address)
 {
     uint8_t *out;
     size_t out_len;
 
     init_llvm_architecture(argv[0]);
-    if (!llvm_asm(argv[0], argv[1], flags, argv[2], 0, &out, &out_len)) {
+    if (!llvm_asm(argv[0], argv[1], flags, argv[2], address, &out, &out_len)) {
         // If assembly failed, the output contains the error message instead of assembled instruction data
         fprintf(stderr, "Failed to assemble. Reason: %s\n", out);
         exit(EXIT_FAILURE);
@@ -144,12 +144,22 @@ int main(int argc, char **argv)
     int opt;
     int assemble = 0;
     uint32_t flags = 0;
+    uint64_t address = 0;
 
-    while ((opt = getopt(argc, argv, "ad")) != -1) {
+    while ((opt = getopt(argc, argv, "ab:d")) != -1) {
         switch (opt) {
         case 'a':
             assemble = 1;
             break;
+        case 'b': {
+            char *end;
+            address = strtoull(optarg, &end, 0);
+            if (*optarg == '\0' || *end != '\0') {
+                fprintf(stderr, "Invalid base address %s\n", optarg);
+                exit(EXIT_FAILURE);
+            }
+            break;
+        }
         case 'd':
             flags |= ASM_ALTERNATE_DIALECT;
             break;
@@ -161,16 +171,17 @@ int main(int argc, char **argv)
     argv += optind;
 
     if (argc != 3) {
-        fprintf(stderr, "Usage: %s [-ad] {cpu-arch} {cpu-model} {block}\n", program);
+        fprintf(stderr, "Usage: %s [-ad] [-b base] {cpu-arch} {cpu-model} {block}\n", program);
         fprintf(stderr, "  {block} must be a valid HEX string when disassembling\n");
         fprintf(stderr, "  {block} must be valid assembly code when assembling\n");
         fprintf(stderr, "  -a: assemble (default: disassemble)\n");
+        fprintf(stderr, "  -b: code base address for assembly\n");
         fprintf(stderr, "  -d: use alternate assembly dialect (for x86: Intel syntax)\n");
         exit(EXIT_FAILURE);
     }
 
     if (assemble) {
-        do_assemble(argc, argv, flags);
+        do_assemble(argc, argv, flags, address);
     } else {
         do_disassemble(argc, argv, flags);
     }
