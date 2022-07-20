@@ -98,7 +98,7 @@ void do_assemble(int argc, char **argv, uint32_t flags)
     llvm_free_asm_result(out);
 }
 
-void do_disassemble(int argc, char **argv)
+void do_disassemble(int argc, char **argv, uint32_t flags)
 {
     uint8_t bytes[1024];
     ssize_t size = unhexdump(argv[2], bytes, sizeof(bytes));
@@ -107,7 +107,7 @@ void do_disassemble(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    void *dc = llvm_create_disasm_cpu_with_flags(argv[0], argv[1], 0);
+    void *dc = llvm_create_disasm_cpu_with_flags(argv[0], argv[1], flags);
     if (dc == NULL)
     {
         fprintf(stderr, "Error creating context (invalid {cpu-arch}?).\n");
@@ -172,7 +172,7 @@ int main(int argc, char **argv)
     if (assemble) {
         do_assemble(argc, argv, flags);
     } else {
-        do_disassemble(argc, argv);
+        do_disassemble(argc, argv, flags);
     }
 
     return 0;
