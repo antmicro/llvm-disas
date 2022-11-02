@@ -27,13 +27,13 @@ variables:
     - mkdir shared
     - cd shared
     - cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_LLVM_LIBS=ON $CMAKE_XVARS ..
-    - make VERBOSE=1
+    - make -j$(nproc) VERBOSE=1
     - $CTEST
     - cd ..
     - mkdir static
     - cd static
     - cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_LLVM_LIBS=ON $CMAKE_XVARS -DSTATIC_LLVM_DISAS=ON ..
-    - make VERBOSE=1
+    - make -j$(nproc) VERBOSE=1
     - $CTEST
 
 .build_artifacts: &build_artifacts
