@@ -134,7 +134,7 @@ if(BUILD_LLVM_LIBS)
         set(LLVM_SRC_SUBDIR  llvm)
         set(LLVM_PATCH_LEVEL 1)
     endif()
-    
+
     include(ExternalProject)
     ExternalProject_Add(llvm-ep
         DOWNLOAD_DIR    ${CMAKE_SOURCE_DIR}/cache
@@ -143,7 +143,8 @@ if(BUILD_LLVM_LIBS)
         SOURCE_SUBDIR   ${LLVM_SRC_SUBDIR}
         PATCH_COMMAND   sh -c "find ${CMAKE_CURRENT_LIST_DIR}/llvm-patches -name '*.patch' | while read -r p $<SEMICOLON> do patch -p${LLVM_PATCH_LEVEL} < \"$p\" $<SEMICOLON> done"
         CMAKE_ARGS      "-DCMAKE_SH=${CMAKE_SH}" "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" "-DCMAKE_TOOLCHAIN_FILE:FILEPATH=${CMAKE_TOOLCHAIN_FILE}" "${LLVM_TABLEGEN_OPTION}"
-        BUILD_COMMAND   ${CMAKE_MAKE_PROGRAM} ${LLVM_MAKE_TARGETS}
+        # The jobserver environment for parallel building is only passed properly if '$(MAKE)' is used.
+        BUILD_COMMAND   "$(MAKE)" ${LLVM_MAKE_TARGETS}
         COMMAND         ${CMAKE_COMMAND} -E copy_if_different ${LLVM_BUILD_PATHS} ${LLVM_LIBS_DIR}
         COMMAND         ${LLVM_TABLEGEN_COPY_COMMAND}
         INSTALL_COMMAND ""
