@@ -71,6 +71,18 @@ linux-arm:
   <<: *build_script
   <<: *build_artifacts
 
+linux-i386:
+  stage: native
+  image: i386/debian:bullseye
+  variables:
+    CMAKE_XVARS:      "-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=i386"
+    RUN_CTEST: "true"
+  <<: *before_script
+  <<: *build_script
+  after_script:
+    - ldd shared/libllvm-disas.so
+  <<: *build_artifacts
+
 linux-x86_64:
   stage: native
   image: debian:bullseye
