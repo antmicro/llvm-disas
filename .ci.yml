@@ -106,10 +106,35 @@ macos:
 
 windows:
   stage: native
-  tags: ["renode-windows"]
+  tags: ['ace-x86_64']
+  image: "debian:bookworm"
+  variables:
+    SCALENODE_CPU: 8
+    SCALENODE_RAM: 8000
+    SCALENODE_DISK: 50
+    QEMU_CPU: 8
+    QEMU_RAM: "6G"
+    QEMU_DISK: "40G"
+  before_script:
+    - apt -qqy update > /dev/null
+    - apt -qqy install wget git qemu-system-x86 qemu-utils openssh-client > /dev/null
+    - mkdir -p ~/.ssh
+    - 'echo -e "LogLevel ERROR\n\nHost windows\n\tStrictHostKeyChecking no\n\tUserKnownHostsFile /dev/null\n\tPort 9022\n\tHostName localhost\n\tUser windows\n\n" > ~/.ssh/config'
   script:
-    - bash .ci/windows.sh
-    - ldd shared/libllvm-disas.dll
+    # `run_windows.sh` isn't downloaded to the current (repository) dir to avoid packing and sending it to the Windows guest in the next step.
+    - pushd ..
+    - wget "$CI_WINDOWS_RUNNER" # run_windows.sh
+    - chmod +x run_windows.sh
+    - QEMU_ALLOW_INTERNET=1 ./run_windows.sh -b -e -c $QEMU_CPU -m $QEMU_RAM -r $QEMU_DISK
+    - popd
+    - ssh windows winfetch
+    - tar -c . | ssh windows 'tar -x -f -'
+    # add /usr/bin to Path as the first element, so we make sure that Posix utilities of the same name as in Windows (e.g. find) are used
+    - ssh windows cmd /c 'setx /M path "/bin;/usr/bin;%path%"'
+    - ssh windows choco install python3 --version=3.10.8 -y --no-progress
+    - ssh windows bash .ci/windows.sh
+    - ssh windows ldd shared/libllvm-disas.dll
+    - ssh windows 'tar -c -f - shared' | tar -x -m -f -
   artifacts:
     name: "$ARTIFACTS_NAME"
     paths:
