@@ -15,19 +15,8 @@ PATH="$PWD/mingw64/bin:$PWD/cmake-3.17.3-win64-x64/bin:$PATH"
 
 # LLVM requires Python 3.6+. Let's test with 'f-strings' introduced in Python 3.6.
 if ! python -c 'f"test"'; then
-    # Add the first directory from 'Program Files' found with Python v3.6+ to PATH.
-    for _python_dir in "$(find '/cygdrive/c/Program Files' '/cygdrive/c/Program Files (x86)' -name 'Python3*')"; do
-        if "$_python_dir/python.exe" -c 'f"test"'; then
-            export PATH="$_python_dir:$PATH"
-            break
-        fi
-    done
-
-    # Check if 'python' now calls at least Python 3.6.
-    if ! python -c 'f"test"'; then
-        echo "Python 3.6+ not found!"
-        exit 1
-    fi
+    echo "Python 3.6+ not found!"
+    exit 1
 fi
 python --version
 
