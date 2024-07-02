@@ -91,20 +91,26 @@ It's only needed for the first run of *CMake*.
 Testing
 -------
 
-The ``test-app`` testing executable provides a way to test the ``llvm-disas`` library's disassembly capabilities.
+The ``test-app`` testing executable provides a way to test the ``llvm-disas`` library's disassembly and assembly capabilities.
 
 Manual testing
 ++++++++++++++
 
-``test-app`` can be executed manually with the ``<cpu-arch> <cpu-model> <block>`` arguments.
-The first two arguments indicate the cpu architecture (e.g. ``riscv64``) and the cpu model (e.g. ``generic-rv64``), respectively, and are based on the *LLVM* naming.
+``test-app`` can be executed manually with the ``[-ad] [-b base] <cpu-arch> <cpu-model> <block>`` arguments.
+The first two positional arguments indicate the cpu architecture (e.g. ``riscv64``) and the cpu model (e.g. ``generic-rv64``), respectively, and are based on the *LLVM* naming.
 
 The third argument is used to pass a block of the machine code to disassemble, represented as a string containing hexadecimal digits (doesn't have to be prefixed with ``0x``).
 
-Automatic testing 
+If the ``-d`` option is specified, the alternate assembly dialect will be used (this is Intel syntax for x86 targets).
+
+If the ``-a`` option is specified, then the ``<block>`` argument should instead contain a block of assembly source to assemble. It will be output as a hex dump.
+
+When assembling, the ``-b`` option can be used to specify the base address of the block being assembled.
+
+Automatic testing
 +++++++++++++++++
 
-Automatic testing is supported by the `CTest <https://gitlab.kitware.com/cmake/community/-/wikis/doc/ctest/Testing-With-CTest>`_.
-``CMakeLists.txt`` contains automatic tests, which test the disassembling of various *"code-blocks"* in a various CPU architectures supported by this library.
+Automatic testing is supported using `CTest <https://gitlab.kitware.com/cmake/community/-/wikis/doc/ctest/Testing-With-CTest>`_.
+``CMakeLists.txt`` contains automatic tests, which test the disassembly and assembly of various *"code-blocks"* in a various CPU architectures supported by this library.
 
-They can be executed after building the project using the ``ctest`` command in a build directory.
+They can be executed after building the project using the ``ctest`` command in the build directory.
