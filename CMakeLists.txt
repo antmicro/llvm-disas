@@ -343,3 +343,15 @@ set(ARCH ppc ppc32)
 bothways   (${ARCH} 4800007c          "b      .+124"                  )
 bothways   (${ARCH} 7f880040          "cmplw  7, 8, 0"                )
 bothways   (${ARCH} 7ce40034          "cntlzw 4, 7"                   )
+
+# Invalid instruction
+assemble   (${ARCH} "invalid ins"     "notarealppcinstruction"        )
+
+# Undefined label
+assemble   (${ARCH} "Undefined label x"     "b      x"                )
+
+# Invalid target
+set(ARCH ppc notarealppccpu)
+assemble   (${ARCH} "Invalid CPU"     "nop"                           )
+set(ARCH notarealarch notarealppccpu)
+assemble   (${ARCH} "Unknown target"  "nop"                           )
