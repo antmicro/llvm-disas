@@ -22,7 +22,7 @@ int LLVMSetDisasmOptions(void *dc, uint64_t options);
 #define MAX_FEATURES 100
 
 // Only used by the llvm_create_disasm_cpu; not in llvm-disas.h
-void *create_riscv_cpu(const char *tripleName, const char *cpu)
+static void *create_riscv_cpu(const char *tripleName, const char *cpu)
 {
     // CPU name must begin with either "rv32" or "rv64" to pass features
     const char *model = NULL;
@@ -53,28 +53,6 @@ void *create_riscv_cpu(const char *tripleName, const char *cpu)
     }
 
     return LLVMCreateDisasmCPUFeatures(tripleName, model, features, NULL, 0, NULL, NULL);
-}
-
-// Architecture aliases based on LLVM's 'parseArch' defined in lib/support/Triple.cpp
-void init_llvm_architecture(const char *arch){
-    if ((strncmp(arch, "arm", 3) == 0 && strncmp(arch, "arm64", 5) != 0)
-                || strncmp(arch, "thumb", 5) == 0) {
-        llvm_disasm_ARM_init();
-    } else if (strncmp(arch, "aarch64", 7) == 0 || strncmp(arch, "arm64", 5) == 0) {
-        llvm_disasm_AArch64_init();
-    } else if (strncmp(arch, "mips", 4) == 0) {
-        llvm_disasm_Mips_init();
-    } else if (strncmp(arch, "powerpc", 7) == 0 || strncmp(arch, "ppc", 3) == 0) {
-        llvm_disasm_PowerPC_init();
-    } else if (strncmp(arch, "riscv", 5) == 0) {
-        llvm_disasm_RISCV_init();
-    } else if (strncmp(arch, "sparc", 5) == 0) {
-        llvm_disasm_Sparc_init();
-    } else if (strncmp(arch, "x86", 3) == 0 || strcmp(arch, "amd64") == 0
-                // All i?86 from i386 to i986 are valid LLVM architectures
-                || (strncmp(arch, "i", 1) == 0 && strncmp(arch+2, "86", 2) == 0)) {
-        llvm_disasm_X86_init();
-    }
 }
 
 void *llvm_create_disasm_cpu_with_flags(const char *tripleName, const char *cpu, uint32_t flags)
