@@ -106,7 +106,6 @@ macos:
 
 windows:
   stage: native
-  tags: ['ace-x86_64']
   image: "debian:bookworm"
   variables:
     SCALENODE_CPU: 8
