@@ -104,6 +104,16 @@ macos:
     - otool -L shared/libllvm-disas.dylib
   <<: *build_artifacts
 
+macos-aarch64:
+  stage: native
+  tags: ["macrunner-arm"]
+  variables:
+    RUN_CTEST: "true"
+  <<: *build_script
+  after_script:
+    - otool -L shared/libllvm-disas.dylib
+  <<: *build_artifacts
+
 windows:
   stage: native
   image: "debian:bookworm"
