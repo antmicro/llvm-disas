@@ -21,6 +21,7 @@
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCObjectFileInfo.h"
 #include "llvm/MC/MCObjectWriter.h"
+#include "llvm/MC/MCELFObjectWriter.h"
 #include "llvm/MC/MCParser/MCTargetAsmParser.h"
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCValue.h"
@@ -33,6 +34,9 @@
 
 using namespace llvm;
 
+// Some targets end up casting this to an ELFObjectWriter, see Target::createMCObjectStreamer,
+// createARMELFStreamer, and MCELFStreamer::getWriter for an example. Ensure the layout of this
+// class looks vaguely like ELFObjectWriter.
 class MemoryObjectWriter : public MCObjectWriter
 {
 public:
@@ -40,6 +44,7 @@ public:
                        uint64_t Address)
         : OS(OS), Failed(Failed), Diagnostics(Diagnostics), Address(Address)
     {
+        (void)Padding; // Silence warning from intentionally unused private field.
     }
 
     virtual void executePostLayoutBinding(MCAssembler &Asm)
@@ -84,6 +89,9 @@ private:
             Failed = true;
         }
     }
+
+    // Contain corruption caused by code that casts this to an EOW
+    char Padding[sizeof(ELFObjectWriter) - sizeof(MCObjectWriter)];
 
     raw_ostream &OS;
     bool &Failed;
