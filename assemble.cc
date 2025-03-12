@@ -13,6 +13,9 @@
 
 #include "llvm/MC/MCAsmBackend.h"
 #include "llvm/MC/MCAsmInfo.h"
+#include "llvm/MC/MCSubtargetInfo.h"
+#include "llvm/MC/MCRegisterInfo.h"
+#include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCAssembler.h"
 #include "llvm/MC/MCCodeEmitter.h"
 #include "llvm/MC/MCContext.h"
@@ -22,7 +25,8 @@
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCValue.h"
 #include "llvm/MC/TargetRegistry.h"
-#include "llvm/Support/RISCVISAInfo.h"
+#include "llvm/TargetParser/RISCVISAInfo.h"
+#include "llvm/TargetParser/Triple.h"
 #include "llvm/Support/SourceMgr.h"
 
 #include "llvm-disas.h"
@@ -38,12 +42,13 @@ public:
     {
     }
 
-    void executePostLayoutBinding(MCAssembler &Asm, const MCAsmLayout &Layout)
+    virtual void executePostLayoutBinding(MCAssembler &Asm)
     {
     }
 
-    void recordRelocation(MCAssembler &Asm, const MCAsmLayout &Layout, const MCFragment *Fragment,
-                          const MCFixup &Fixup, MCValue Target, uint64_t &FixedValue)
+    void recordRelocation(MCAssembler &Asm, const MCFragment *Fragment,
+                          const MCFixup &Fixup, MCValue Target,
+                          uint64_t &FixedValue)
     {
         // If we see an undefined symbol, consider assembly failed.
         // All referenced labels must be defined within the provided code block.
@@ -54,11 +59,11 @@ public:
         FixedValue += Address;
     }
 
-    uint64_t writeObject(MCAssembler &Asm, const MCAsmLayout &Layout)
+    uint64_t writeObject(MCAssembler &Asm)
     {
         for (const MCSection &Section : Asm) {
             if (Section.getName() == ".text") {
-                Asm.writeSectionData(OS, &Section, Layout);
+                Asm.writeSectionData(OS, &Section);
             }
         }
         return 0;
@@ -151,7 +156,7 @@ static bool AssembleInner(StringRef &Arch, StringRef &CPU, uint32_t Flags,
     }
 
     // Apply RISC-V features
-    if (TheTriple.isRISCV() && CPU.startswith("rv")) {
+    if (TheTriple.isRISCV() && CPU.starts_with("rv")) {
         auto IsaInfo = RISCVISAInfo::parseArchString(CPU, false);
         if (auto E = IsaInfo.takeError()) {
             std::string ErrorStr = "Invalid RISC-V feature string: ";
@@ -160,7 +165,7 @@ static bool AssembleInner(StringRef &Arch, StringRef &CPU, uint32_t Flags,
             return false;
         }
 
-        for (const std::string &Feature : (*IsaInfo)->toFeatureVector()) {
+        for (const std::string &Feature : (*IsaInfo)->toFeatures()) {
             STI->ApplyFeatureFlag(Feature);
         }
     }
@@ -171,7 +176,7 @@ static bool AssembleInner(StringRef &Arch, StringRef &CPU, uint32_t Flags,
 
     MCTargetOptions MCOptions;
     std::unique_ptr<MCInstrInfo> MCII(TheTarget->createMCInstrInfo());
-    std::unique_ptr<MCCodeEmitter> CE(TheTarget->createMCCodeEmitter(*MCII, *MRI, Ctx));
+    std::unique_ptr<MCCodeEmitter> CE(TheTarget->createMCCodeEmitter(*MCII, Ctx));
     std::unique_ptr<MCAsmBackend> MAB(TheTarget->createMCAsmBackend(*STI, *MRI, MCOptions));
 
     raw_svector_ostream VOS(OutBytes);
@@ -180,7 +185,7 @@ static bool AssembleInner(StringRef &Arch, StringRef &CPU, uint32_t Flags,
         std::make_unique<MemoryObjectWriter>(VOS, WriterFailed, Diagnostics, Address);
 
     std::unique_ptr<MCStreamer> Str(TheTarget->createMCObjectStreamer(
-	    TheTriple, Ctx, std::move(MAB), std::move(OW), std::move(CE), *STI, false, false, false));
+	    TheTriple, Ctx, std::move(MAB), std::move(OW), std::move(CE), *STI));
 
     std::unique_ptr<MCAsmParser> Parser(createMCAsmParser(SrcMgr, Ctx, *Str, *MAI));
 
