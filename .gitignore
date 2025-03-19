@@ -56,3 +56,19 @@ dkms.conf
 
 # LLVM sources and built LLVM libraries
 cache/*
+llvm-ep-prefix/
+llvm-tblgen
+
+# Generated makefiles
+CMakeFiles/
+CMakeCache.txt
+CTestTestfile.cmake
+Makefile
+cmake_install.cmake
+
+# Generated testing files
+Testing/
+test-app
+
+# GDB
+.gdb_history
