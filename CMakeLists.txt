@@ -311,6 +311,9 @@ bothways   (${ARCH} c2f20002          "movt   r2, #8192"              )
 bothways   (${ARCH} c858              "ldr    r0, [r1, r3]"           )
 bothways   (${ARCH} 4ff46d42          "mov.w  r2, #60672"             )
 bothways   (${ARCH} b610              "asrs   r6, r6, #2"             )
+# SoftFail disassembly result due to a branch being in non-tail position in an IT block,
+# treated as success
+disassemble(${ARCH} 86bffee700bffee7  "itte hi bhi #-4 nophi bls #-4" )
 
 set(ARCH arm arm926ej-s)
 bothways   (${ARCH} 01508532          "addlo  r5, r5, #1"             )

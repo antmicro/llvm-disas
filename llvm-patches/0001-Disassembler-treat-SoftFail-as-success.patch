@@ -1,0 +1,15 @@
+--- a/llvm/lib/MC/MCDisassembler/Disassembler.cpp	2025-04-02 17:36:30.812986883 +0200
++++ b/llvm/lib/MC/MCDisassembler/Disassembler.cpp	2025-04-02 17:36:42.957018447 +0200
+@@ -205,10 +205,9 @@
+   S = DisAsm->getInstruction(Inst, Size, Data, PC, Annotations);
+   switch (S) {
+   case MCDisassembler::Fail:
+-  case MCDisassembler::SoftFail:
+-    // FIXME: Do something different for soft failure modes?
+-    return 0;
++  return 0;
+ 
++  case MCDisassembler::SoftFail:
+   case MCDisassembler::Success: {
+     StringRef AnnotationsStr = Annotations.str();
+ 
