@@ -21,6 +21,7 @@ ADD_ARCH(PowerPC)
 ADD_ARCH(RISCV)
 ADD_ARCH(Sparc)
 ADD_ARCH(X86)
+ADD_ARCH(MSP430)
 
 #define FUNC_INIT_ARCH(x)                      \
     void llvm_disasm_ ## x ## _init(void)      \
@@ -38,6 +39,7 @@ FUNC_INIT_ARCH(PowerPC)
 FUNC_INIT_ARCH(RISCV)
 FUNC_INIT_ARCH(Sparc)
 FUNC_INIT_ARCH(X86)
+FUNC_INIT_ARCH(MSP430)
 
 // Architecture aliases based on LLVM's 'parseArch' defined in lib/support/Triple.cpp
 void init_llvm_architecture(const char *arch){
@@ -58,5 +60,7 @@ void init_llvm_architecture(const char *arch){
                 // All i?86 from i386 to i986 are valid LLVM architectures
                 || (strncmp(arch, "i", 1) == 0 && strncmp(arch+2, "86", 2) == 0)) {
         llvm_disasm_X86_init();
+    } else if (strncmp(arch, "msp430", 6) == 0) {
+        llvm_disasm_MSP430_init();
     }
 }
