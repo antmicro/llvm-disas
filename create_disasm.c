@@ -18,38 +18,65 @@ int LLVMSetDisasmOptions(void *dc, uint64_t options);
 
 #define LLVMDisassembler_Option_AsmPrinterVariant 4
 
-// Allow even more than possible unique features in case of some duplicates.
-#define MAX_FEATURES 100
-
 // Only used by the llvm_create_disasm_cpu; not in llvm-disas.h
 static void *create_riscv_cpu(const char *tripleName, const char *cpu)
 {
     // CPU name must begin with either "rv32" or "rv64" to pass features
     const char *model = NULL;
-    if (strncmp(cpu, "rv32", 4) == 0) {
+    if (strncasecmp(cpu, "rv32", 4) == 0) {
         model = "generic-rv32";
-    } else if (strncmp(cpu, "rv64", 4) == 0) {
+    } else if (strncasecmp(cpu, "rv64", 4) == 0) {
         model = "generic-rv64";
     } else {
         return NULL;
     }
 
-    char features[MAX_FEATURES * 3 + 1] = {0};
+    // Seem much more than enough but added checks nevertheless, better safe than sorry.
+    #define FEATURE_MAX_CHARS 100
+    #define FEATURES_MAX_CHARS 2000
+
+    char features[FEATURES_MAX_CHARS] = {0};
     char *next_c = (char *)(cpu + 4);
-    int features_n = 0;
-    while (*next_c != '\0' && features_n < MAX_FEATURES) {
-        if (*next_c == 'g' && features_n <= MAX_FEATURES - 4) {
-            // "g" combines "m", "a", "f" and "d" features
-            strcat(features, "+m,+a,+f,+d,");
-            features_n += 4;
-        } else if (*next_c != 'i') { // Base integer instruction set is implicitly enabled
-            char feature[4];
-            // Invalid features, duplicates and extra commas are ignored gracefully.
-            snprintf(feature, 4, "+%c,", *next_c);
-            strcat(features, feature);
-            features_n++;
+    while (*next_c != '\0') {
+        char feature[FEATURE_MAX_CHARS] = {0};
+        if (*next_c == '_') {  // long extension like `zba` in `rv32i_zba`
+            next_c++;
+            for (int i = 0; i < FEATURE_MAX_CHARS && *next_c != '_' && *next_c != '\0'; i++, next_c++) {
+                feature[i] = *next_c;
+            }
+            // Feature name was truncated.
+            if (*next_c != '_' && *next_c != '\0') {
+                return NULL;
+            }
+        } else {
+            feature[0] = *next_c;
+            next_c++;
         }
-        next_c++;
+
+        size_t feature_length = strlen(feature);
+        if (feature_length > 0) {
+            // Base integer instruction set, Zicntr, Zicsr, Zifencei, Zihpm are implicitly enabled.
+            // See: https://llvm.org/docs/RISCVUsage.html#riscv-i2p1-note
+            if (strcasecmp(feature, "i") == 0
+                    || strcasecmp(feature, "zicntr") == 0
+                    || strcasecmp(feature, "zicsr") == 0
+                    || strcasecmp(feature, "zifencei") == 0
+                    || strcasecmp(feature, "zihpm") == 0) {
+                continue;
+            } else if (strcasecmp(feature, "g") == 0) {
+                // `g` combines these features; leading `+` and trailing `,` are added in snprintf.
+                strcpy(feature, "m,+a,+f,+d");
+                feature_length = strlen(feature);
+            }
+
+            size_t current_length = strlen(features);
+            // +2 for `+` before, `,` after. Trailing comma is accepted.
+            if(current_length + feature_length + 2 >= FEATURES_MAX_CHARS - 1) {
+                return NULL;
+            }
+
+            snprintf(&features[current_length], feature_length + 3, "+%s,", feature);
+        }
     }
 
     return LLVMCreateDisasmCPUFeatures(tripleName, model, features, NULL, 0, NULL, NULL);
