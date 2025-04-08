@@ -40,6 +40,8 @@ void *llvm_create_disasm_cpu(const char *tripleName, const char *cpu);
 
 int llvm_disasm_instruction(void *dc, uint8_t *bytes, uint64_t bytessize, char *outString, uint32_t strlen);
 
+int llvm_disasm_set_condexec_state(void *dc, uint64_t state);
+
 void llvm_disasm_dispose(void *dc);
 
 bool llvm_asm(const char *arch, const char *cpu, uint32_t flags, const char *instructions, uint64_t addr, uint8_t **out, size_t *outLen);
