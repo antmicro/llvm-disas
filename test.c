@@ -98,7 +98,51 @@ void do_assemble(int argc, char **argv, uint32_t flags, uint64_t address)
     llvm_free_asm_result(out);
 }
 
-void do_disassemble(int argc, char **argv, uint32_t flags)
+struct condexec_entry {
+    bool present, ok;
+    size_t off;
+    uint64_t state;
+};
+
+// This function uses strtok's global state and should be called like strtok:
+// pass the string to parse on the first call and NULL on subsequent calls.
+struct condexec_entry parse_condexec_entry(char *s)
+{
+    struct condexec_entry entry = {0};
+    char *tok;
+    char *end;
+
+    // No entry
+    if (s && *s == '\0') {
+        entry.ok = true;
+        return entry;
+    }
+
+    tok = strtok(s, "=");
+    if (tok) {
+        entry.present = true;
+    } else {
+        return entry;
+    }
+    entry.off = strtoull(tok, &end, 0);
+    if (*tok == '\0' || *end != '\0') {
+        return entry;
+    }
+
+    tok = strtok(NULL, ",");
+    if (!tok) {
+        return entry;
+    }
+    entry.state = strtoull(tok, &end, 0);
+    if (*tok == '\0' || *end != '\0') {
+        return entry;
+    }
+
+    entry.ok = true;
+    return entry;
+}
+
+void do_disassemble(int argc, char **argv, uint32_t flags, char *condexec)
 {
     uint8_t bytes[1024];
     ssize_t size = unhexdump(argv[2], bytes, sizeof(bytes));
@@ -118,12 +162,28 @@ void do_disassemble(int argc, char **argv, uint32_t flags)
     char *buf = (char *) malloc(buf_size);
 
     unsigned int cur_size = size;
-    uint8_t *cur_bytes = (uint8_t *) &bytes;
+    size_t i = 0;
+    struct condexec_entry ce = parse_condexec_entry(condexec ? condexec : "");
+    if (ce.present && !ce.ok) {
+        fprintf(stderr, "Invalid condexec entry.\n");
+        exit(EXIT_FAILURE);
+    }
 
     while (cur_size != 0) {
         memset(buf, 0, buf_size);
 
-        int cnt = llvm_disasm_instruction(dc, cur_bytes, cur_size, buf, buf_size);
+        if (ce.present && i == ce.off) {
+            llvm_disasm_set_condexec_state(dc, ce.state);
+
+            // Next one.
+            ce = parse_condexec_entry(NULL);
+            if (ce.present && !ce.ok) {
+                fprintf(stderr, "Invalid condexec entry.\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        int cnt = llvm_disasm_instruction(dc, &bytes[i], cur_size, buf, buf_size);
 
         if (cnt > 0) {
             printf("%s\n", buf);
@@ -131,7 +191,7 @@ void do_disassemble(int argc, char **argv, uint32_t flags)
             break;
         }
 
-        cur_bytes += cnt;
+        i += cnt;
         cur_size -= cnt;
     }
 
@@ -145,8 +205,9 @@ int main(int argc, char **argv)
     int assemble = 0;
     uint32_t flags = 0;
     uint64_t address = 0;
+    char *condexec = NULL;
 
-    while ((opt = getopt(argc, argv, "ab:d")) != -1) {
+    while ((opt = getopt(argc, argv, "ab:c:d")) != -1) {
         switch (opt) {
         case 'a':
             assemble = 1;
@@ -160,10 +221,18 @@ int main(int argc, char **argv)
             }
             break;
         }
+        case 'c':
+            condexec = optarg;
+            break;
         case 'd':
             flags |= ASM_ALTERNATE_DIALECT;
             break;
         }
+    }
+
+    if (condexec && assemble) {
+        fprintf(stderr, "-c not supported with -a\n");
+        exit(EXIT_FAILURE);
     }
 
     char *program = argv[0];
@@ -171,11 +240,12 @@ int main(int argc, char **argv)
     argv += optind;
 
     if (argc != 3) {
-        fprintf(stderr, "Usage: %s [-ad] [-b base] {cpu-arch} {cpu-model} {block}\n", program);
+        fprintf(stderr, "Usage: %s [-ad] [-b base] [-c off1=condexec1[,off2=condexec2]...] {cpu-arch} {cpu-model} {block}\n", program);
         fprintf(stderr, "  {block} must be a valid HEX string when disassembling\n");
         fprintf(stderr, "  {block} must be valid assembly code when assembling\n");
         fprintf(stderr, "  -a: assemble (default: disassemble)\n");
         fprintf(stderr, "  -b: code base address for assembly\n");
+        fprintf(stderr, "  -c: condexec values to set while disassembling, and at which offset\n");
         fprintf(stderr, "  -d: use alternate assembly dialect (for x86: Intel syntax)\n");
         exit(EXIT_FAILURE);
     }
@@ -183,7 +253,7 @@ int main(int argc, char **argv)
     if (assemble) {
         do_assemble(argc, argv, flags, address);
     } else {
-        do_disassemble(argc, argv, flags);
+        do_disassemble(argc, argv, flags, condexec);
     }
 
     return 0;
