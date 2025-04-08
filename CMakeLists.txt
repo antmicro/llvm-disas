@@ -4,8 +4,8 @@
 # This file is licensed under the Apache License 2.0.
 # Full license text is available in the 'LICENSE' file.
 
-# Because of `BUILD_RPATH_USE_ORIGIN` target property
-cmake_minimum_required(VERSION 3.14)
+# Because of CMP0110: add_test() supports arbitrary characters in test names.
+cmake_minimum_required(VERSION 3.19)
 
 project (renode-llvm-disas)
 
@@ -314,6 +314,10 @@ bothways   (${ARCH} b610              "asrs   r6, r6, #2"             )
 # SoftFail disassembly result due to a branch being in non-tail position in an IT block,
 # treated as success
 disassemble(${ARCH} 86bffee700bffee7  "itte hi bhi #-4 nophi bls #-4" )
+# Disassembly with externally-supplied condexec state
+disassemble(${ARCH} 00bf00bf00bf00bf00bf "nopeq nopeq nopeq nopeq nop" "-c 0=0x01")
+disassemble(${ARCH} 00bf00bf          "nop nopeq"         "-c 2=0x01" )
+disassemble(${ARCH} 00bf00bf00bf00bf00bf "nopeq nopeq nop nopne nop" "-c 0=0x01,4=0x00,6=0x18")
 
 set(ARCH arm arm926ej-s)
 bothways   (${ARCH} 01508532          "addlo  r5, r5, #1"             )
