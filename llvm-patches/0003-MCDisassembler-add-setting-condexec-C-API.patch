@@ -1,0 +1,35 @@
+diff --git a/llvm/include/llvm-c/Disassembler.h b/llvm/include/llvm-c/Disassembler.h
+index 4bc6b04dd..c311086b4 100644
+--- a/llvm/include/llvm-c/Disassembler.h
++++ b/llvm/include/llvm-c/Disassembler.h
+@@ -84,6 +84,12 @@ int LLVMSetDisasmOptions(LLVMDisasmContextRef DC, uint64_t Options);
+ /* The option to print in color */
+ #define LLVMDisassembler_Option_Color 32
+ 
++/**
++ * Set the disassembler's condexec state. Returns 1 if it can set the State and
++ * 0 otherwise.
++ */
++int LLVMSetDisasmCondexecState(LLVMDisasmContextRef DC, uint64_t State);
++
+ /**
+  * Dispose of a disassembler context.
+  */
+diff --git a/llvm/lib/MC/MCDisassembler/Disassembler.cpp b/llvm/lib/MC/MCDisassembler/Disassembler.cpp
+index f9664eaca..2977f15a9 100644
+--- a/llvm/lib/MC/MCDisassembler/Disassembler.cpp
++++ b/llvm/lib/MC/MCDisassembler/Disassembler.cpp
+@@ -293,3 +293,13 @@ int LLVMSetDisasmOptions(LLVMDisasmContextRef DCR, uint64_t Options){
+   }
+   return (Options == 0);
+ }
++
++//
++// LLVMSetDisasmCondexecState() sets the disassembler's condexec state. It
++// returns 1 if it can set the State and 0 otherwise.
++//
++int LLVMSetDisasmCondexecState(LLVMDisasmContextRef DCR, uint64_t State){
++  LLVMDisasmContext *DC = static_cast<LLVMDisasmContext *>(DCR);
++  const MCDisassembler *DisAsm = DC->getDisAsm();
++  return DisAsm->setCondexecState(State);
++}
