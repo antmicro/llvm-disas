@@ -355,6 +355,7 @@ set(ARCH ppc ppc32)
 bothways   (${ARCH} 4800007c          "b      .+124"                  )
 bothways   (${ARCH} 7f880040          "cmplw  7, 8, 0"                )
 bothways   (${ARCH} 7ce40034          "cntlzw 4, 7"                   )
+bothways   (${ARCH} 7c0006ac          "eieio"                         )
 
 set(ARCH msp430 msp430)
 assemble   (${ARCH} 03430343          "nop\n mov r3, r3"              )
