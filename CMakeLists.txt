@@ -158,7 +158,7 @@ if(BUILD_LLVM_LIBS)
         URL             ${LLVM_SRC_URL}
         URL_HASH        SHA512=${LLVM_SRC_SHA512}
         SOURCE_SUBDIR   ${LLVM_SRC_SUBDIR}
-        PATCH_COMMAND   sh -c "find ${CMAKE_CURRENT_LIST_DIR}/llvm-patches -name '*.patch' | while read -r p $<SEMICOLON> do patch -p${LLVM_PATCH_LEVEL} < \"$p\" $<SEMICOLON> done"
+        PATCH_COMMAND   sh -c "find ${CMAKE_CURRENT_LIST_DIR}/llvm-patches -name '*.patch' | sort -n | while read -r p $<SEMICOLON> do patch -p${LLVM_PATCH_LEVEL} < \"$p\" $<SEMICOLON> done"
         CMAKE_ARGS      "-DCMAKE_SH=${CMAKE_SH}" "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" "-DCMAKE_TOOLCHAIN_FILE:FILEPATH=${CMAKE_TOOLCHAIN_FILE}" "${LLVM_TABLEGEN_OPTION}"
         # The jobserver environment for parallel building is only passed properly if '$(MAKE)' is used.
         BUILD_COMMAND   "$(MAKE)" ${LLVM_MAKE_TARGETS}
