@@ -370,6 +370,9 @@ bothways   (${ARCH} 0b5a              "add   r10, r11"                )
 bothways   (${ARCH} 0512              "push  r5"                      )
 bothways   (${ARCH} 3041              "ret"                           )
 disassemble(${ARCH} 34d03412          "bis   #4660, r4"               )
+# 3412 - invalid
+# Without 0004-MSP430-fail-instead-of-unreachabling.patch: Invalid immediate value. UNREACHABLE executed at llvm/lib/Target/MSP430/Disassembler/MSP430Disassembler.cpp:115.
+disassemble(${ARCH} 03433412          "nop"                           )
 
 # msp430x is currently just an alias for msp430 and does not support extended instructions
 set(ARCH msp430 msp430x)

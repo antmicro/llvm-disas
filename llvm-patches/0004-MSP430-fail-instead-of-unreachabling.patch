@@ -1,0 +1,87 @@
+diff --git a/llvm/lib/Target/MSP430/Disassembler/MSP430Disassembler.cpp b/llvm/lib/Target/MSP430/Disassembler/MSP430Disassembler.cpp
+index 519bba763..b9831f613 100644
+--- a/llvm/lib/Target/MSP430/Disassembler/MSP430Disassembler.cpp
++++ b/llvm/lib/Target/MSP430/Disassembler/MSP430Disassembler.cpp
+@@ -112,7 +112,7 @@ static DecodeStatus DecodeCGImm(MCInst &MI, uint64_t Bits, uint64_t Address,
+   int64_t Imm;
+   switch (Bits) {
+   default:
+-    llvm_unreachable("Invalid immediate value");
++    return MCDisassembler::Fail;
+   case 0x22: Imm =  4; break;
+   case 0x32: Imm =  8; break;
+   case 0x03: Imm =  0; break;
+@@ -172,8 +172,7 @@ static AddrMode DecodeSrcAddrMode(unsigned Rs, unsigned As) {
+   case 1: return amIndexed;
+   case 2: return amIndirect;
+   case 3: return amIndirectPost;
+-  default:
+-    llvm_unreachable("As out of range");
++  default: return amInvalid;
+   }
+ }
+ 
+@@ -205,7 +204,7 @@ static const uint8_t *getDecoderTable(AddrMode SrcAM, unsigned Words) {
+   assert(0 < Words && Words < 4 && "Incorrect number of words");
+   switch (SrcAM) {
+   default:
+-    llvm_unreachable("Invalid addressing mode");
++    return nullptr;
+   case amRegister:
+     assert(Words < 3 && "Incorrect number of words");
+     return Words == 2 ? DecoderTableAlpha32 : DecoderTableAlpha16;
+@@ -269,8 +268,13 @@ DecodeStatus MSP430Disassembler::getInstructionI(MCInst &MI, uint64_t &Size,
+     break;
+   }
+ 
+-  DecodeStatus Result = decodeInstruction(getDecoderTable(SrcAM, Words), MI,
+-                                          Insn, Address, this, STI);
++  const uint8_t *DecoderTable = getDecoderTable(SrcAM, Words);
++  if (!DecoderTable) {
++    Size = 2;
++    return DecodeStatus::Fail;
++  }
++  DecodeStatus Result = decodeInstruction(DecoderTable, MI, Insn, Address,
++                                          this, STI);
+   if (Result != MCDisassembler::Fail) {
+     Size = Words * 2;
+     return Result;
+@@ -330,8 +334,7 @@ static MSP430CC::CondCodes getCondCode(unsigned Cond) {
+   case 5: return MSP430CC::COND_GE;
+   case 6: return MSP430CC::COND_L;
+   case 7: return MSP430CC::COND_NONE;
+-  default:
+-    llvm_unreachable("Cond out of range");
++  default: return MSP430CC::COND_INVALID;
+   }
+ }
+ 
+@@ -340,19 +343,24 @@ DecodeStatus MSP430Disassembler::getInstructionCJ(MCInst &MI, uint64_t &Size,
+                                                   uint64_t Address,
+                                                   raw_ostream &CStream) const {
+   uint64_t Insn = support::endian::read16le(Bytes.data());
+-  unsigned Cond = fieldFromInstruction(Insn, 10, 3);
++  MSP430CC::CondCodes Cond = getCondCode(fieldFromInstruction(Insn, 10, 3));
+   unsigned Offset = fieldFromInstruction(Insn, 0, 10);
+ 
++  Size = 2;
++
++  if (Cond == MSP430CC::COND_INVALID) {
++    return DecodeStatus::Fail;
++  }
++
+   MI.addOperand(MCOperand::createImm(SignExtend32(Offset, 10)));
+ 
+-  if (Cond == 7)
++  if (Cond == MSP430CC::COND_NONE)
+     MI.setOpcode(MSP430::JMP);
+   else {
+     MI.setOpcode(MSP430::JCC);
+-    MI.addOperand(MCOperand::createImm(getCondCode(Cond)));
++    MI.addOperand(MCOperand::createImm(Cond));
+   }
+ 
+-  Size = 2;
+   return DecodeStatus::Success;
+ }
+ 
