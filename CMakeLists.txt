@@ -254,6 +254,9 @@ bothways   (${ARCH} 97820000          "auipc  t0, 8"                  )
 bothways   (${ARCH} 0f100000          "fence.i        "               ) # Zifencei
 bothways   (${ARCH} 73f10134          "csrrci sp, mscratch, 3"        ) # Zicsr
 
+set(ARCH riscv32 rv32i_zacas) # With Zacas extension
+bothways   (${ARCH} 2f26b528          "amocas.w a2, a1, (a0)"         ) # Zacas
+
 set(ARCH riscv32 rv32imafdc) # The same as rv32gc
 bothways   (${ARCH} 335cab02          "divu           s8, s6, a0"     ) # rv32m
 bothways   (${ARCH} 2f250508          "amoswap.w      a0, zero, (a0)" ) # rv32a
