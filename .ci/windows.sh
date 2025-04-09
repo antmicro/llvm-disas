@@ -6,12 +6,10 @@ set -x
 # Add 7-Zip's directory to the shell's PATH
 PATH="/cygdrive/c/Program Files/7-Zip:$PATH"
 
-# Download, extract and add to the shell's PATH: CMake and MinGW with POSIX (!) threads
-curl -O -L 'https://github.com/Kitware/CMake/releases/download/v3.17.3/cmake-3.17.3-win64-x64.zip'
-curl -O -L 'https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-posix/sjlj/x86_64-8.1.0-release-posix-sjlj-rt_v6-rev0.7z'
-7z x 'cmake-3.17.3-win64-x64.zip'
-7z x 'x86_64-8.1.0-release-posix-sjlj-rt_v6-rev0.7z'
-PATH="$PWD/mingw64/bin:$PWD/cmake-3.17.3-win64-x64/bin:$PATH"
+# Download, extract and add to the shell's PATH: MinGW with POSIX (!) threads
+curl -O -L 'https://github.com/brechtsanders/winlibs_mingw/releases/download/14.2.0posix-12.0.0-ucrt-r3/winlibs-x86_64-posix-seh-gcc-14.2.0-llvm-19.1.7-mingw-w64ucrt-12.0.0-r3.7z'
+7z x 'winlibs-x86_64-posix-seh-gcc-14.2.0-llvm-19.1.7-mingw-w64ucrt-12.0.0-r3.7z'
+PATH="$PWD/mingw64/bin:$PATH"
 
 # LLVM requires Python 3.6+. Let's test with 'f-strings' introduced in Python 3.6.
 if ! python -c 'f"test"'; then

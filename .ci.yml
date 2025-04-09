@@ -7,7 +7,8 @@ variables:
 
 .before_script_content: &before_script_content |
   apt update
-  apt install -y cmake g++$TOOLCHAIN_SUFFIX patch python3 xz-utils
+  apt install -y g++$TOOLCHAIN_SUFFIX patch python3 python3-pip xz-utils
+  pip install cmake==3.20.5
 
 .before_script: &before_script
   before_script:
@@ -73,7 +74,7 @@ linux-arm:
 
 linux-i386:
   stage: native
-  image: i386/debian:bullseye
+  image: debian:bullseye?arch=i386
   variables:
     CMAKE_XVARS:      "-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=i386"
     RUN_CTEST: "true"
@@ -99,6 +100,10 @@ macos:
   tags: ["renode-macos"]
   variables:
     RUN_CTEST: "true"
+  before_script:
+    - export PATH="$PATH:/opt/homebrew/bin"
+    - brew install cmake
+    - brew link --overwrite cmake
   <<: *build_script
   after_script:
     - otool -L shared/libllvm-disas.dylib
@@ -109,6 +114,10 @@ macos-aarch64:
   tags: ["macrunner-arm"]
   variables:
     RUN_CTEST: "true"
+  before_script:
+    - export PATH="$PATH:/opt/homebrew/bin"
+    - brew install cmake
+    - brew link --overwrite cmake
   <<: *build_script
   after_script:
     - otool -L shared/libllvm-disas.dylib
@@ -116,7 +125,7 @@ macos-aarch64:
 
 windows:
   stage: native
-  image: "debian:bookworm"
+  image: "debian:bullseye"
   variables:
     SCALENODE_CPU: 8
     SCALENODE_RAM: 8000
@@ -141,6 +150,7 @@ windows:
     # add /usr/bin to Path as the first element, so we make sure that Posix utilities of the same name as in Windows (e.g. find) are used
     - ssh windows cmd /c 'setx /M path "/bin;/usr/bin;%path%"'
     - ssh windows choco install python3 --version=3.10.8 -y --no-progress
+    - ssh windows choco install cmake -y --no-progress --installargs 'ADD_CMAKE_TO_PATH=System'
     - ssh windows bash .ci/windows.sh
     - ssh windows ldd shared/libllvm-disas.dll
     - ssh windows 'tar --exclude=shared/llvm-ep-prefix -c -f - shared' | tar -x -m -f -
