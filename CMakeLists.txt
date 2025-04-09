@@ -356,6 +356,26 @@ bothways   (${ARCH} 4800007c          "b      .+124"                  )
 bothways   (${ARCH} 7f880040          "cmplw  7, 8, 0"                )
 bothways   (${ARCH} 7ce40034          "cntlzw 4, 7"                   )
 
+set(ARCH msp430 msp430)
+assemble   (${ARCH} 03430343          "nop\n mov r3, r3"              )
+disassemble(${ARCH} 0343              "nop"                           )
+bothways   (${ARCH} 1243              "mov   #1, r2"                  )
+bothways   (${ARCH} 34403412          "mov   #4660, r4"               )
+bothways   (${ARCH} 0645              "mov   r5, r6"                  )
+bothways   (${ARCH} 0554              "add   r4, r5"                  )
+assemble   (${ARCH} 093c              "jmp   .+20"                    )
+disassemble(${ARCH} 093c              "jmp   $+20"                    )
+assemble   (${ARCH} 0343fe3f          "a: nop\n jmp a"                )
+bothways   (${ARCH} 0b5a              "add   r10, r11"                )
+bothways   (${ARCH} 0512              "push  r5"                      )
+bothways   (${ARCH} 3041              "ret"                           )
+disassemble(${ARCH} 34d03412          "bis   #4660, r4"               )
+
+# msp430x is currently just an alias for msp430 and does not support extended instructions
+set(ARCH msp430 msp430x)
+assemble   (${ARCH} 03430343          "nop\n mov r3, r3"              )
+
+set(ARCH ppc ppc32)
 # Invalid instruction
 assemble   (${ARCH} "invalid ins"     "notarealppcinstruction"        )
 
