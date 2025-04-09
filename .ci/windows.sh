@@ -23,7 +23,7 @@ python --version
 # Configure, build and test
 mkdir shared
 cd shared
-cmake .. -G 'MinGW Makefiles' -DCMAKE_BUILD_TYPE=Release -DBUILD_LLVM_LIBS=1 -DCMAKE_SH=CMAKE_SH-NOTFOUND
+cmake .. -G 'MinGW Makefiles' -DCMAKE_BUILD_TYPE=Release -DBUILD_LLVM_LIBS=1 -DCMAKE_SH=CMAKE_SH-NOTFOUND -DCMAKE_TLS_VERIFY=OFF
 mingw32-make -j$(nproc) VERBOSE=1
 
 ctest -V
