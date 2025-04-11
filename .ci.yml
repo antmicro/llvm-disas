@@ -4,11 +4,12 @@ stages:
 
 variables:
   ARTIFACTS_NAME: "llvm-disas-$CI_PIPELINE_ID-$CI_JOB_NAME"
+  CMAKE_VERSION: 3.20.5
 
 .before_script_content: &before_script_content |
   apt update
   apt install -y g++$TOOLCHAIN_SUFFIX patch python3 python3-pip xz-utils
-  pip install cmake==3.20.5
+  pip install cmake==$CMAKE_VERSION
 
 .before_script: &before_script
   before_script:
@@ -150,7 +151,7 @@ windows:
     # add /usr/bin to Path as the first element, so we make sure that Posix utilities of the same name as in Windows (e.g. find) are used
     - ssh windows cmd /c 'setx /M path "/bin;/usr/bin;%path%"'
     - ssh windows choco install python3 --version=3.10.8 -y --no-progress
-    - ssh windows choco install cmake -y --no-progress --installargs 'ADD_CMAKE_TO_PATH=System'
+    - ssh windows choco install cmake --version=$CMAKE_VERSION -y --no-progress --installargs 'ADD_CMAKE_TO_PATH=System'
     - ssh windows bash .ci/windows.sh
     - ssh windows ldd shared/libllvm-disas.dll
     - ssh windows 'tar --exclude=shared/llvm-ep-prefix -c -f - shared' | tar -x -m -f -
