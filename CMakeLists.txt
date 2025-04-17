@@ -181,12 +181,12 @@ endif()
 if(STATIC_LLVM_DISAS)
     set(LLVM_OBJS_DIR ${CMAKE_BINARY_DIR}/obj)
 
-    file(MAKE_DIRECTORY ${LLVM_OBJS_DIR})
-    foreach(LIB ${LLVM_LIB_PATHS})
-        execute_process(COMMAND ${CMAKE_AR} -x ${LIB} WORKING_DIRECTORY ${LLVM_OBJS_DIR})
+    foreach(LIB ${LLVM_LIBS})
+        file(MAKE_DIRECTORY ${LLVM_OBJS_DIR}/${LIB})
+        execute_process(COMMAND ${CMAKE_AR} -x ${LLVM_LIBS_DIR}/libLLVM${LIB}.a WORKING_DIRECTORY ${LLVM_OBJS_DIR}/${LIB})
     endforeach(LIB)
 
-    file(GLOB LLVM_OBJS ${LLVM_OBJS_DIR}/*)
+    file(GLOB_RECURSE LLVM_OBJS ${LLVM_OBJS_DIR}/*.o)
     set_target_properties(llvm_objs PROPERTIES IMPORTED_OBJECTS "${LLVM_OBJS}")
 endif()
 
