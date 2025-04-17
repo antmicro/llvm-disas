@@ -88,10 +88,11 @@ else()
         $<$<CXX_COMPILER_ID:GNU>:-Wl,--start-group>
         ${LLVM_LIB_PATHS}
         $<$<CXX_COMPILER_ID:GNU>:-Wl,--end-group>
+        # Make sure MinGW links all non-Windows libraries statically
+        # ntdll required for RtlGetLastNtStatus in llvm/lib/Support/ErrorHandling.cpp.
+        # Quotes: see https://cmake.org/pipermail/cmake/2018-October/068344.html. The normal way works on CMake 3.25
+        "$<$<BOOL:${CMAKE_HOST_WIN32}>:ntdll;-static>"
     )
-
-    # Make sure MinGW links all non-Windows libraries statically
-    target_link_libraries(llvm-disas PRIVATE $<$<BOOL:${CMAKE_HOST_WIN32}>:-static>)
 
     # Suppress CMP0042 policy warning about not setting MACOSX_RPATH for library on MAC OS X (which is only used in 'make install')
     if(CMAKE_HOST_APPLE)
