@@ -129,10 +129,10 @@ windows:
   image: "debian:bullseye"
   variables:
     SCALENODE_CPU: 8
-    SCALENODE_RAM: 8000
+    SCALENODE_RAM: 16000
     SCALENODE_DISK: 50
     QEMU_CPU: 8
-    QEMU_RAM: "6G"
+    QEMU_RAM: "12G"
     QEMU_DISK: "40G"
   before_script:
     - apt -qqy update > /dev/null
