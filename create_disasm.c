@@ -16,6 +16,8 @@ void *LLVMCreateDisasmCPUFeatures(const char *tripleName, const char *cpu, const
 
 int LLVMSetDisasmOptions(void *dc, uint64_t options);
 
+char *LLVMGetDisasmCPUFeatures(const char *TT);
+
 #define LLVMDisassembler_Option_AsmPrinterVariant 4
 
 // Only used by the llvm_create_disasm_cpu; not in llvm-disas.h
@@ -116,4 +118,11 @@ void llvm_disasm_print_support(const char *tripleName)
   init_llvm_architecture(tripleName);
 
   LLVMCreateDisasmCPUFeatures(tripleName, "", "+help", NULL, 0, NULL, NULL);
+}
+
+void llvm_disasm_get_cpu_features(const char *tripleName, char **features)
+{
+  init_llvm_architecture(tripleName);
+
+  *features = LLVMGetDisasmCPUFeatures(tripleName);
 }

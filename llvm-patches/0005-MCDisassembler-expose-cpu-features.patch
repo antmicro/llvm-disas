@@ -1,0 +1,67 @@
+diff --git a/llvm/include/llvm-c/Disassembler.h b/llvm/include/llvm-c/Disassembler.h
+index 4bc6b04dd6ea..17b19b06ac69 100644
+--- a/llvm/include/llvm-c/Disassembler.h
++++ b/llvm/include/llvm-c/Disassembler.h
+@@ -84,6 +84,8 @@ int LLVMSetDisasmOptions(LLVMDisasmContextRef DC, uint64_t Options);
+ /* The option to print in color */
+ #define LLVMDisassembler_Option_Color 32
+ 
++char *LLVMGetDisasmCPUFeatures(const char *TT);
++
+ /**
+  * Dispose of a disassembler context.
+  */
+diff --git a/llvm/lib/MC/MCDisassembler/Disassembler.cpp b/llvm/lib/MC/MCDisassembler/Disassembler.cpp
+index 684413e1e3a5..3e2747d93f96 100644
+--- a/llvm/lib/MC/MCDisassembler/Disassembler.cpp
++++ b/llvm/lib/MC/MCDisassembler/Disassembler.cpp
+@@ -240,6 +240,49 @@ size_t LLVMDisasmInstruction(LLVMDisasmContextRef DCR, uint8_t *Bytes,
+   llvm_unreachable("Invalid DecodeStatus!");
+ }
+ 
++char *LLVMGetDisasmCPUFeatures(const char *TT){
++  std::string Error;
++  const Target *TheTarget = TargetRegistry::lookupTarget(TT, Error);
++  if (!TheTarget)
++    return 0;
++
++  std::unique_ptr<const MCSubtargetInfo> STI(
++      TheTarget->createMCSubtargetInfo(TT, "", ""));
++  if (!STI)
++    return 0;
++
++  ArrayRef<SubtargetFeatureKV> CPUFeatures = STI->getAllProcessorFeatures();
++
++  size_t Length = 0;
++  const char *Separator = ";";
++
++  for (auto &Feature : CPUFeatures) {
++    Length += strlen(Feature.Key);
++    Length += strlen(Separator);
++  }
++  
++  // Don't count trailing separator. It'll be later replaced by a null character.
++  Length -= strlen(Separator);
++
++  char *Out = (char*)malloc(Length * sizeof(char) + 1);
++
++  if (Out == NULL)
++    return NULL;
++  
++
++  size_t Offset = 0;
++  for (auto &Feature : CPUFeatures) {
++    memcpy(Out + Offset, Feature.Key, strlen(Feature.Key));
++    Offset += strlen(Feature.Key);
++    memcpy(Out + Offset, Separator, strlen(Separator));
++    Offset += strlen(Separator);
++  }
++
++  Out[Length] = '\0';
++
++  return Out;
++}
++
+ //
+ // LLVMSetDisasmOptions() sets the disassembler's options.  It returns 1 if it
+ // can set all the Options and 0 otherwise.
