@@ -206,8 +206,9 @@ int main(int argc, char **argv)
     uint32_t flags = 0;
     uint64_t address = 0;
     char *condexec = NULL;
+    char *list = NULL;
 
-    while ((opt = getopt(argc, argv, "ab:c:d")) != -1) {
+    while ((opt = getopt(argc, argv, "ab:c:dl:")) != -1) {
         switch (opt) {
         case 'a':
             assemble = 1;
@@ -227,6 +228,9 @@ int main(int argc, char **argv)
         case 'd':
             flags |= ASM_ALTERNATE_DIALECT;
             break;
+        case 'l':
+            list = optarg;
+            break;
         }
     }
 
@@ -238,15 +242,23 @@ int main(int argc, char **argv)
     char *program = argv[0];
     argc -= optind;
     argv += optind;
+  
+    if (list != NULL && argc >= 1) {
+        if (strcmp(list, "pretty") == 0) {
+            llvm_disasm_print_support(argv[0]);
+            return 0;
+        }
+    }
 
-    if (argc != 3) {
-        fprintf(stderr, "Usage: %s [-ad] [-b base] [-c off1=condexec1[,off2=condexec2]...] {cpu-arch} {cpu-model} {block}\n", program);
+    if (argc != 3 || list != NULL) {
+        fprintf(stderr, "Usage: %s [-ad] [-b base] [-c off1=condexec1[,off2=condexec2]...] [-l {pretty}] {cpu-arch} {cpu-model} {block}\n", program);
         fprintf(stderr, "  {block} must be a valid HEX string when disassembling\n");
         fprintf(stderr, "  {block} must be valid assembly code when assembling\n");
         fprintf(stderr, "  -a: assemble (default: disassemble)\n");
         fprintf(stderr, "  -b: code base address for assembly\n");
         fprintf(stderr, "  -c: condexec values to set while disassembling, and at which offset\n");
         fprintf(stderr, "  -d: use alternate assembly dialect (for x86: Intel syntax)\n");
+        fprintf(stderr, "  -l: list available CPUs and features for the provided {cpu-arch}\n");
         exit(EXIT_FAILURE);
     }
 

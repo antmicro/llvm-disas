@@ -110,3 +110,10 @@ void *llvm_create_disasm_cpu(const char *tripleName, const char *cpu)
 {
     return llvm_create_disasm_cpu_with_flags(tripleName, cpu, 0);
 }
+
+void llvm_disasm_print_support(const char *tripleName)
+{
+  init_llvm_architecture(tripleName);
+
+  LLVMCreateDisasmCPUFeatures(tripleName, "", "+help", NULL, 0, NULL, NULL);
+}
