@@ -44,6 +44,8 @@ void llvm_disasm_print_support(const char *tripleName);
 
 void llvm_disasm_get_cpu_features(const char *tripleName, char **features);
 
+void llvm_disasm_get_cpus(const char *tripleName, char **cpus);
+
 int llvm_disasm_instruction(void *dc, uint8_t *bytes, uint64_t bytessize, char *outString, uint32_t strlen);
 
 int llvm_disasm_set_condexec_state(void *dc, uint64_t state);

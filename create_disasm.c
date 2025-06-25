@@ -17,6 +17,7 @@ void *LLVMCreateDisasmCPUFeatures(const char *tripleName, const char *cpu, const
 int LLVMSetDisasmOptions(void *dc, uint64_t options);
 
 char *LLVMGetDisasmCPUFeatures(const char *TT);
+char *LLVMGetDisasmCPUs(const char *TT);
 
 #define LLVMDisassembler_Option_AsmPrinterVariant 4
 
@@ -115,14 +116,39 @@ void *llvm_create_disasm_cpu(const char *tripleName, const char *cpu)
 
 void llvm_disasm_print_support(const char *tripleName)
 {
-  init_llvm_architecture(tripleName);
+    init_llvm_architecture(tripleName);
 
-  LLVMCreateDisasmCPUFeatures(tripleName, "", "+help", NULL, 0, NULL, NULL);
+    LLVMCreateDisasmCPUFeatures(tripleName, "", "+help", NULL, 0, NULL, NULL);
 }
 
 void llvm_disasm_get_cpu_features(const char *tripleName, char **features)
 {
-  init_llvm_architecture(tripleName);
+    init_llvm_architecture(tripleName);
 
-  *features = LLVMGetDisasmCPUFeatures(tripleName);
+    char *cpu_features = LLVMGetDisasmCPUFeatures(tripleName);
+
+    if (strcmp(tripleName, "riscv32") == 0 || strcmp(tripleName, "riscv64") == 0) {
+        // LLVM doesn't recognize "g" as a feature but it's properly translated to `mafd` in `create_riscv_cpu`.
+        char *g_feature = ";g";
+        char *features_with_g = calloc(strlen(cpu_features) + strlen(g_feature) + 1, sizeof(char));
+        if (features_with_g != NULL) {
+            strcat(features_with_g, cpu_features);
+            strcat(features_with_g, g_feature);
+
+            *features = features_with_g;
+        } else {
+            *features = NULL;
+        }
+        free(cpu_features);
+        return;
+    }
+
+    *features = cpu_features;
+}
+
+void llvm_disasm_get_cpus(const char *tripleName, char **cpus)
+{
+    init_llvm_architecture(tripleName);
+
+    *cpus = LLVMGetDisasmCPUs(tripleName);
 }

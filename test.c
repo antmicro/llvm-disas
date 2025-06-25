@@ -257,10 +257,19 @@ int main(int argc, char **argv)
             printf("%s\n", out);
             return 0;
         }
+        if (strcmp(list, "cpus") == 0) {
+            char *out = NULL;
+            llvm_disasm_get_cpus(argv[0], &out);
+            if (out == NULL) {
+                return 1;
+            }
+            printf("%s\n", out);
+            return 0;
+        }
     }
 
     if (argc != 3 || list != NULL) {
-        fprintf(stderr, "Usage: %s [-ad] [-b base] [-c off1=condexec1[,off2=condexec2]...] [-l {pretty,features}] {cpu-arch} {cpu-model} {block}\n", program);
+        fprintf(stderr, "Usage: %s [-ad] [-b base] [-c off1=condexec1[,off2=condexec2]...] [-l {pretty,features,cpus}] {cpu-arch} {cpu-model} {block}\n", program);
         fprintf(stderr, "  {block} must be a valid HEX string when disassembling\n");
         fprintf(stderr, "  {block} must be valid assembly code when assembling\n");
         fprintf(stderr, "  -a: assemble (default: disassemble)\n");

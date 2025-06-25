@@ -413,6 +413,9 @@ function(support triple cpu features)
         add_test(NAME ${TEST_NAME}_features_${FEAT} COMMAND test-app -l features ${triple})
         set_tests_properties(${TEST_NAME}_features_${FEAT} PROPERTIES PASS_REGULAR_EXPRESSION "^.*\;${FEAT}\;.*$" )
     endforeach(FEAT)
+
+    add_test(NAME ${TEST_NAME}_cpu COMMAND test-app -l cpus ${triple})
+    set_tests_properties(${TEST_NAME}_cpu PROPERTIES PASS_REGULAR_EXPRESSION "^.*;${cpu};.*$")
 endfunction(support)
 
 # NOTE: These semicolon-separated values are not to be confused with the output of the test-app. They are parsed as a CMake list.
