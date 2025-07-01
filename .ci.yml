@@ -25,7 +25,7 @@ variables:
   script:
     - set -ex
     # ":" is a no-op in bash
-    - if [ "$RUN_CTEST" = "true" ]; then CTEST="ctest -V"; else CTEST=":"; fi
+    - if [ "$RUN_CTEST" = "true" ]; then CTEST="ctest -V --output-on-failure"; else CTEST=":"; fi
     - mkdir shared
     - cd shared
     - cmake -DCMAKE_BUILD_TYPE=Release $CMAKE_XVARS ..
