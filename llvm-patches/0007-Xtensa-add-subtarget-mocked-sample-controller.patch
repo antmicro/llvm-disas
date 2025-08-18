@@ -1,0 +1,14 @@
+diff --git a/llvm/lib/Target/Xtensa/Xtensa.td b/llvm/lib/Target/Xtensa/Xtensa.td
+index 460a15e..9c757f7 100644
+--- a/llvm/lib/Target/Xtensa/Xtensa.td
++++ b/llvm/lib/Target/Xtensa/Xtensa.td
+@@ -28,6 +28,9 @@ class Proc<string Name, list<SubtargetFeature> Features>
+     : Processor<Name, NoItineraries, Features>;
+ 
+ def : Proc<"generic", []>;
++// in LLVM 20.1.7 only 'FeatureDensity' option is supported,
++// so full sample-controller cpu connot be added.
++def : Proc<"mocked-sample-controller", [FeatureDensity]>;
+ 
+ //===----------------------------------------------------------------------===//
+ // Register File Description
