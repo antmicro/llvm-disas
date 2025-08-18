@@ -33,6 +33,8 @@ void llvm_disasm_X86_init(void);
 
 void llvm_disasm_MSP430_init(void);
 
+void llvm_disasm_Xtensa_init(void);
+
 void init_llvm_architecture(const char *arch);
 
 void *llvm_create_disasm_cpu_with_flags(const char *tripleName, const char *cpu, uint32_t flags);
