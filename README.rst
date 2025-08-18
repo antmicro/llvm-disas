@@ -14,6 +14,7 @@ The following *LLVM CPU architecture groups* (e.g. *X86* groups at least *i386*,
 - *RISCV*
 - *Sparc*
 - *X86*
+- *Xtensa* (experimental)
 
 Support for a given CPU architecture depends on whether the appropriate ``LLVMInitialize<ARCHGROUP>*`` functions are wrapped by the library (and appropriate ``libLLVM<ARCHGROUP>*`` libraries linked during building).
 
