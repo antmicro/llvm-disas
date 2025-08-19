@@ -29,13 +29,13 @@ variables:
     - mkdir shared
     - cd shared
     - cmake -DCMAKE_BUILD_TYPE=Release $CMAKE_XVARS ..
-    - make -j$(nproc) VERBOSE=1
+    - make -j$(nproc || sysctl -n hw.ncpu) VERBOSE=1
     - $CTEST
     - cd ..
     - mkdir static
     - cd static
     - cmake -DCMAKE_BUILD_TYPE=Release $CMAKE_XVARS -DSTATIC_LLVM_DISAS=ON ..
-    - make -j$(nproc) VERBOSE=1
+    - make -j$(nproc || sysctl -n hw.ncpu) VERBOSE=1
     - $CTEST
 
 .build_artifacts: &build_artifacts
@@ -112,9 +112,11 @@ macos:
 
 macos-aarch64:
   stage: native
-  tags: ["macrunner-arm"]
   variables:
     RUN_CTEST: "true"
+    SCALENODE_FEATURES: macos-aarch64
+    SCALENODE_RAM: 8192
+    SCALENODE_CPU: 8
   before_script:
     - export PATH="$PATH:/opt/homebrew/bin"
     - brew install cmake
