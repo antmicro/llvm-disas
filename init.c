@@ -5,8 +5,11 @@
 // Full license text is available in the 'LICENSE' file.
 //
 #include <string.h>
+#include <pthread.h>
 
 #include "llvm-disas.h"
+
+static pthread_mutex_t init_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #define ADD_ARCH(x)                             \
     void LLVMInitialize ## x ## Disassembler(); \
@@ -45,6 +48,7 @@ FUNC_INIT_ARCH(Xtensa)
 
 // Architecture aliases based on LLVM's 'parseArch' defined in lib/support/Triple.cpp
 void init_llvm_architecture(const char *arch){
+    pthread_mutex_lock(&init_mutex);
     if ((strncmp(arch, "arm", 3) == 0 && strncmp(arch, "arm64", 5) != 0)
                 || strncmp(arch, "thumb", 5) == 0) {
         llvm_disasm_ARM_init();
@@ -67,4 +71,5 @@ void init_llvm_architecture(const char *arch){
     } else if (strncmp(arch, "xtensa", 6) == 0) {
         llvm_disasm_Xtensa_init();
     }
+    pthread_mutex_unlock(&init_mutex);
 }
